@@ -107,21 +107,18 @@ size_t File::Size() const {
   return static_cast<size_t>(end);
 }
 
-// Starts MemoryStream implementation.
-const size_t MemoryStream::kBufferSizeIncrement = 16 << 10;
-const size_t MemoryStream::kMaxSize = std::numeric_limits<int>::max();
+// SpanStream implementation.
+// ----------------------------------------------------------------------------
 
-MemoryStream::MemoryStream()
-    : buffer_(nullptr), alloc_size_(0), end_(0), tell_(0) {}
+const size_t SpanStream::kMaxSize = std::numeric_limits<int>::max();
 
-MemoryStream::~MemoryStream() {
-  ozz::memory::default_allocator()->Deallocate(buffer_);
-  buffer_ = nullptr;
-}
+SpanStream::SpanStream(ozz::span<byte> _buffer) : buffer_(_buffer) {}
 
-bool MemoryStream::opened() const { return true; }
+SpanStream::~SpanStream() {}
 
-size_t MemoryStream::Read(void* _buffer, size_t _size) {
+bool SpanStream::opened() const { return true; }
+
+size_t SpanStream::Read(void* _buffer, size_t _size) {
   // A read cannot set file position beyond the end of the file.
   // A read cannot exceed the maximum Stream size.
   if (tell_ > end_ || _size > kMaxSize) {
@@ -129,12 +126,12 @@ size_t MemoryStream::Read(void* _buffer, size_t _size) {
   }
 
   const int read_size = math::Min(end_ - tell_, static_cast<int>(_size));
-  std::memcpy(_buffer, buffer_ + tell_, read_size);
+  std::memcpy(_buffer, buffer_.data() + tell_, read_size);
   tell_ += read_size;
   return read_size;
 }
 
-size_t MemoryStream::Write(const void* _buffer, size_t _size) {
+size_t SpanStream::Write(const void* _buffer, size_t _size) {
   if (_size > kMaxSize || tell_ > static_cast<int>(kMaxSize - _size)) {
     // A write cannot exceed the maximum Stream size.
     return 0;
@@ -144,27 +141,27 @@ size_t MemoryStream::Write(const void* _buffer, size_t _size) {
     // beyond the end of existing data in the file. If data is later written at
     // this point, subsequent reads of data in the gap shall return bytes with
     // the value 0 until data is actually written into the gap.
-    if (!Resize(tell_)) {
+    if (!Resize(tell_, buffer_)) {
       return 0;
     }
     // Fills the gap with 0's.
     const size_t gap = tell_ - end_;
-    std::memset(buffer_ + end_, 0, gap);
+    std::memset(buffer_.data() + end_, 0, gap);
     end_ = tell_;
   }
 
   const int size = static_cast<int>(_size);
   const int tell_end = tell_ + size;
-  if (Resize(tell_end)) {
+  if (Resize(tell_end, buffer_)) {
     end_ = math::Max(tell_end, end_);
-    std::memcpy(buffer_ + tell_, _buffer, _size);
+    std::memcpy(buffer_.data() + tell_, _buffer, _size);
     tell_ += size;
     return _size;
   }
   return 0;
 }
 
-int MemoryStream::Seek(int _offset, Origin _origin) {
+int SpanStream::Seek(int _offset, Origin _origin) {
   int origin;
   switch (_origin) {
     case kCurrent:
@@ -192,28 +189,27 @@ int MemoryStream::Seek(int _offset, Origin _origin) {
   return 0;
 }
 
-int MemoryStream::Tell() const { return tell_; }
+int SpanStream::Tell() const { return tell_; }
 
-size_t MemoryStream::Size() const { return static_cast<size_t>(end_); }
+size_t SpanStream::Size() const { return static_cast<size_t>(end_); }
 
-bool MemoryStream::Resize(size_t _size) {
-  if (_size > alloc_size_) {
-    // Resize to the next multiple of kBufferSizeIncrement, requires
-    // kBufferSizeIncrement to be a power of 2.
-    static_assert(
-        (MemoryStream::kBufferSizeIncrement & (kBufferSizeIncrement - 1)) == 0,
-        "kBufferSizeIncrement must be a power of 2");
-    const size_t new_size = ozz::Align(_size, kBufferSizeIncrement);
-    byte* new_buffer = reinterpret_cast<byte*>(
-        ozz::memory::default_allocator()->Allocate(new_size, 16));
-    if (buffer_ != nullptr) {
-      std::memcpy(new_buffer, buffer_, alloc_size_);
-    }
-    ozz::memory::default_allocator()->Deallocate(buffer_);
-    buffer_ = new_buffer;
-    alloc_size_ = new_size;
+bool SpanStream::Resize(size_t _size, ozz::span<byte>& _buffer) {
+  return _size <= _buffer.size();
+}
+
+// MemoryStream implementation.
+// ----------------------------------------------------------------------------
+
+MemoryStream::MemoryStream() : SpanStream({}) {}
+
+MemoryStream::~MemoryStream() {}
+
+bool MemoryStream::Resize(size_t _size, ozz::span<byte>& _buffer) {
+  if (_size > _buffer.size()) {
+    allocation_.resize(_size);
+    _buffer = ozz::make_span(allocation_);
   }
-  return _size == 0 || buffer_ != nullptr;
+  return true;
 }
 }  // namespace io
 }  // namespace ozz

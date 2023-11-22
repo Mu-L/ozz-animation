@@ -33,7 +33,9 @@
 
 #include <cstddef>
 
+#include "ozz/base/containers/vector.h"
 #include "ozz/base/platform.h"
+#include "ozz/base/span.h"
 
 namespace ozz {
 namespace io {
@@ -103,37 +105,84 @@ class OZZ_BASE_DLL File : public Stream {
   explicit File(void* _file);
 
   // Close the file if it is opened.
-  virtual ~File();
+  virtual ~File() override;
 
   // Close the file if it is opened.
   void Close();
 
   // See Stream::opened for details.
-  virtual bool opened() const;
+  virtual bool opened() const override;
 
   // See Stream::Read for details.
-  virtual size_t Read(void* _buffer, size_t _size);
+  virtual size_t Read(void* _buffer, size_t _size) override;
 
   // See Stream::Write for details.
-  virtual size_t Write(const void* _buffer, size_t _size);
+  virtual size_t Write(const void* _buffer, size_t _size) override;
 
   // See Stream::Seek for details.
-  virtual int Seek(int _offset, Origin _origin);
+  virtual int Seek(int _offset, Origin _origin) override;
 
   // See Stream::Tell for details.
-  virtual int Tell() const;
+  virtual int Tell() const override;
 
   // See Stream::Tell for details.
-  virtual size_t Size() const;
+  virtual size_t Size() const override;
 
  private:
   // The CRT file pointer.
   void* file_;
 };
 
-// Implements an in-memory Stream. Allows to use a memory buffer as a Stream.
+// Implements an in-memory Stream. Buffer is provided at construction time and
+// can be reallocated if overriden. The opening mode is equivalent to fopen w+b
+// (binary read/write).
+class OZZ_BASE_DLL SpanStream : public Stream {
+ public:
+  // Construct an empty memory stream opened in w+b mode.
+  SpanStream(ozz::span<byte> _buffer);
+
+  // Closes the stream and deallocates memory buffer.
+  virtual ~SpanStream();
+
+  // See Stream::opened for details.
+  virtual bool opened() const override;
+
+  // See Stream::Read for details.
+  virtual size_t Read(void* _buffer, size_t _size) override;
+
+  // See Stream::Write for details.
+  virtual size_t Write(const void* _buffer, size_t _size) override;
+
+  // See Stream::Seek for details.
+  virtual int Seek(int _offset, Origin _origin) override;
+
+  // See Stream::Tell for details.
+  virtual int Tell() const override;
+
+  // See Stream::Tell for details.
+  virtual size_t Size() const override;
+
+ private:
+  // Maximum stream size.
+  static const size_t kMaxSize;
+
+  // Asked to resizes buffers _size bytes.
+  // Returns true if the buffer can contains _size bytes.
+  virtual bool Resize(size_t _size, ozz::span<byte>& _buffer);
+
+  // Buffer of data.
+  ozz::span<byte> buffer_;
+
+  // The effective size of the data in the buffer.
+  int end_ = 0;
+
+  // The cursor position in the buffer of data.
+  int tell_ = 0;
+};
+
+// Implements a self-allocated in-memory Stream.
 // The opening mode is equivalent to fopen w+b (binary read/write).
-class OZZ_BASE_DLL MemoryStream : public Stream {
+class OZZ_BASE_DLL MemoryStream : public SpanStream {
  public:
   // Construct an empty memory stream opened in w+b mode.
   MemoryStream();
@@ -141,48 +190,14 @@ class OZZ_BASE_DLL MemoryStream : public Stream {
   // Closes the stream and deallocates memory buffer.
   virtual ~MemoryStream();
 
-  // See Stream::opened for details.
-  virtual bool opened() const;
-
-  // See Stream::Read for details.
-  virtual size_t Read(void* _buffer, size_t _size);
-
-  // See Stream::Write for details.
-  virtual size_t Write(const void* _buffer, size_t _size);
-
-  // See Stream::Seek for details.
-  virtual int Seek(int _offset, Origin _origin);
-
-  // See Stream::Tell for details.
-  virtual int Tell() const;
-
-  // See Stream::Tell for details.
-  virtual size_t Size() const;
-
  private:
   // Resizes buffers size to _size bytes. If _size is less than the actual
   // buffer size, then it remains unchanged.
   // Returns true if the buffer can contains _size bytes.
-  bool Resize(size_t _size);
+  virtual bool Resize(size_t _size, ozz::span<byte>& _buffer) override;
 
-  // Size of the buffer increment.
-  static const size_t kBufferSizeIncrement;
-
-  // Maximum stream size.
-  static const size_t kMaxSize;
-
-  // Buffer of data.
-  byte* buffer_;
-
-  // The size of the buffer, which is greater or equal to the size of the data
-  // it contains (end_).
-  size_t alloc_size_;
-
-  // The effective size of the data in the buffer.
-  int end_;
-
-  // The cursor position in the buffer of data.
-  int tell_;
+  // Buffer storage
+  ozz::vector<byte> allocation_;
 };
 }  // namespace io
 }  // namespace ozz

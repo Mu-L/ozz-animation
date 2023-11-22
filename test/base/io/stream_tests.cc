@@ -25,13 +25,13 @@
 //                                                                            //
 //----------------------------------------------------------------------------//
 
-#include "ozz/base/io/stream.h"
-
 #include <stdint.h>
+
 #include <limits>
 
 #include "gtest/gtest.h"
-
+#include "ozz/base/containers/array.h"
+#include "ozz/base/io/stream.h"
 #include "ozz/base/platform.h"
 
 void TestStream(ozz::io::Stream* _stream) {
@@ -79,7 +79,7 @@ void TestSeek(ozz::io::Stream* _stream) {
   EXPECT_EQ(_stream->Tell(), static_cast<int>(sizeof(Type)));
   EXPECT_EQ(_stream->Size(), sizeof(Type));
 
-  const int64_t kEnd = 465827;
+  const int64_t kEnd = 46582;
   // Force file length to kEnd but do not write to the stream.
   EXPECT_EQ(_stream->Seek(kEnd - _stream->Tell(), ozz::io::Stream::kCurrent),
             0);
@@ -169,6 +169,22 @@ TEST(File, Stream) {
     TestSeek(&file);
   }
   { EXPECT_TRUE(ozz::io::File::Exist("test.bin")); }
+}
+
+TEST(SpanStream, Stream) {
+  ozz::array<ozz::byte, 634627> buffer;
+  {
+    ozz::io::SpanStream stream(ozz::make_span(buffer));
+    TestStream(&stream);
+  }
+  {
+    ozz::io::SpanStream stream(ozz::make_span(buffer));
+    TestSeek(&stream);
+  }
+  {
+    ozz::io::SpanStream stream(ozz::make_span(buffer));
+    TestTooBigStream(&stream);
+  }
 }
 
 TEST(MemoryStream, Stream) {

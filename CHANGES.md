@@ -1,3 +1,9 @@
+Release version next
+----------------------
+
+* Library
+  - [base] Implements a span stream, using a external buffer provided at construction time.
+
 Release version 0.14.2
 ----------------------
 
