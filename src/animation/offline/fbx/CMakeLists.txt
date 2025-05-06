@@ -39,6 +39,8 @@ install(TARGETS fbx2ozz DESTINATION bin/tools)
 # Gerenate binary data to a specific folder (${ozz_media_directory}/bin)
 set(build_configurations
   # Library data
+
+  # Pro Animation Bank
   "/fbx/pab/skeleton.fbx\;{\"skeleton\":{\"filename\":\"pab_skeleton.ozz\",\"import\":{\"enable\":true}},\"animations\":[]}\;output:pab_skeleton.ozz"
   "/fbx/pab/atlas.fbx\;{\"skeleton\":{\"filename\":\"pab_skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"pab_atlas_raw.ozz\",\"raw\":true,\"optimize\":false}]}\;output:pab_atlas_raw.ozz\;depend:pab_skeleton.ozz"
   "/fbx/pab/atlas.fbx\;{\"skeleton\":{\"filename\":\"pab_skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"pab_atlas.ozz\"}]}\;output:pab_atlas.ozz\;depend:pab_skeleton.ozz"
@@ -48,6 +50,10 @@ set(build_configurations
   "/fbx/pab/crackhead.fbx\;{\"skeleton\":{\"filename\":\"pab_skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"pab_crackhead.ozz\"},{\"filename\":\"pab_crackhead_additive.ozz\",\"additive\":true}]}\;output:pab_crackhead_additive.ozz\;output:pab_crackhead.ozz\;depend:pab_skeleton.ozz"
   "/fbx/pab/hand.fbx\;{\"skeleton\":{\"filename\":\"pab_skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"clip\":\"curl\",\"filename\":\"pab_curl_additive.ozz\",\"additive\":true,\"additive_reference\":\"skeleton\"},{\"clip\":\"splay\",\"filename\":\"pab_splay_additive.ozz\",\"additive\":true,\"additive_reference\":\"skeleton\"}]}\;output:pab_curl_additive.ozz\;output:pab_splay_additive.ozz\;depend:pab_skeleton.ozz"
   
+  # Quaternius
+  # Note that we don't list all animations here, so it might create issues if dependencies are needed
+  "/fbx/quaternius/ual.fbx\;{\"skeleton\":{\"filename\":\"quaternius/skeleton.ozz\",\"import\":{\"enable\":true}},\"animations\":[{\"filename\":\"quaternius/*.ozz\"}]}\;output:quaternius/skeleton.ozz\;output:quaternius/Rig_A_TPose.ozz"
+
   # Library data with root motion
   "/fbx/pab/atlas.fbx\;{\"skeleton\":{\"filename\":\"pab_skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"pab_atlas_no_motion.ozz\",\"tracks\":{\"motion\":{\"enable\":true,\"rotation\":{\"loop\":true},\"filename\":\"pab_atlas_motion_track.ozz\"}}}]}\;output:pab_atlas_no_motion.ozz\;output:pab_atlas_motion_track.ozz\;depend:pab_skeleton.ozz"
   "/fbx/pab/locomotions.fbx\;{\"skeleton\":{\"filename\":\"pab_skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"pab_*_no_motion.ozz\",\"tracks\":{\"motion\":{\"enable\":true,\"rotation\":{\"loop\":true},\"filename\":\"pab_*_motion_track.ozz\"}}}]}\;output:pab_walk_no_motion.ozz\;output:pab_jog_no_motion.ozz\;output:pab_run_no_motion.ozz\;output:pab_walk_motion_track.ozz\;output:pab_jog_motion_track.ozz\;output:pab_run_motion_track.ozz\;depend:pab_skeleton.ozz"
@@ -117,6 +123,12 @@ foreach(line ${build_configurations})
   if (NOT outputs)
     message("Missing output file(s) list.")
   endif()
+
+  # Make sure output directory exists
+  foreach(output ${outputs})
+    get_filename_component(output_dir "${output}" DIRECTORY)
+    make_directory("${output_dir}")
+  endforeach()
 
   # Dump config file
   if(NOT config_file)
