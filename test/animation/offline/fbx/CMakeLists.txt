@@ -49,7 +49,7 @@ add_test(NAME fbx2ozz_skel_simple_dae_seymour COMMAND fbx2ozz "--file=${ozz_medi
 
 add_test(NAME fbx2ozz_anim_badcontent COMMAND fbx2ozz "--file=${ozz_temp_directory}/bad.fbx")
 set_tests_properties(fbx2ozz_anim_badcontent PROPERTIES DEPENDS fbx2ozz_skel_simple)
-set_tests_properties(fbx2ozz_anim_badcontent PROPERTIES PASS_REGULAR_EXPRESSION "FbxImporter initialization failed with error: Unexpected file type")
+set_tests_properties(fbx2ozz_anim_badcontent PROPERTIES PASS_REGULAR_EXPRESSION "FbxImporter initialization failed with error: None of the registered readers can process the file")
 
 # Run fbx2ozz animation passing tests
 #----------------------------
