@@ -58,3 +58,5 @@ add_test(NAME sample_browse_invalid_skeleton_path COMMAND sample_browse "--skele
 set_tests_properties(sample_browse_invalid_skeleton_path PROPERTIES WILL_FAIL true)
 add_test(NAME sample_browse_invalid_animations_path COMMAND sample_browse "--animations=media/bad_list.txt" $<$<BOOL:${ozz_run_tests_headless}>:--norender>)
 set_tests_properties(sample_browse_invalid_animations_path PROPERTIES WILL_FAIL true)
+add_test(NAME sample_browse_invalid_mesh_path COMMAND sample_browse "--mesh=media/bad_mesh.ozz" $<$<BOOL:${ozz_run_tests_headless}>:--norender>)
+set_tests_properties(sample_browse_invalid_mesh_path PROPERTIES WILL_FAIL true)
