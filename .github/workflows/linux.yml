@@ -14,10 +14,6 @@ jobs:
           - build_type: Release
             option: default
           - build_type: Debug
-            option: gcc10
-            compiler_c: gcc-10
-            compiler_cxx: g++-10
-          - build_type: Debug
             option: gcc11
             compiler_c: gcc-11
             compiler_cxx: g++-11
@@ -34,18 +30,6 @@ jobs:
             compiler_c: gcc-13
             compiler_cxx: g++-13
           - build_type: Debug
-            option: clang11
-            compiler_c: clang-11
-            compiler_cxx: clang++-11
-          - build_type: Debug
-            option: clang12
-            compiler_c: clang-12
-            compiler_cxx: clang++-12
-          - build_type: Debug
-            option: clang13
-            compiler_c: clang-13
-            compiler_cxx: clang++-13
-          - build_type: Debug
             option: clang14
             compiler_c: clang-14
             compiler_cxx: clang++-14
@@ -53,10 +37,22 @@ jobs:
             option: clang15
             compiler_c: clang-15
             compiler_cxx: clang++-15
+          - build_type: Debug
+            option: clang16
+            compiler_c: clang-16
+            compiler_cxx: clang++-16
+          - build_type: Debug
+            option: clang17
+            compiler_c: clang-17
+            compiler_cxx: clang++-17
+          - build_type: Debug
+            option: clang18
+            compiler_c: clang-18
+            compiler_cxx: clang++-18
           - build_type: Release
-            option: clang15
-            compiler_c: clang-15
-            compiler_cxx: clang++-15
+            option: clang18
+            compiler_c: clang-18
+            compiler_cxx: clang++-18
   
     steps:
     - uses: actions/checkout@v4
