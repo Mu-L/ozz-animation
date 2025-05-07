@@ -81,14 +81,18 @@ else()
 
   # ignored-attributes reports issue when using _m128 as template argument
   check_cxx_compiler_flag("-Wignored-attributes" W_IGNORED_ATTRIBUTES)
-
   if(W_IGNORED_ATTRIBUTES)
     add_compile_options(-Wno-ignored-attributes)
   endif()
 
+  # Disables deprecated literal operator warnings
+  check_cxx_compiler_flag("-Wdeprecated-literal-operator" W_DEPRECATED_LITERAL_OPERATOR)
+  if(W_DEPRECATED_LITERAL_OPERATOR)
+    add_compile_options(-Wno-deprecated-literal-operator)
+  endif()
+
   # Disables c98 retrocompatibility warnings
   check_cxx_compiler_flag("-Wc++98-compat-pedantic" W_98_COMPAT_PEDANTIC)
-
   if(W_98_COMPAT_PEDANTIC)
     add_compile_options(-Wno-c++98-compat-pedantic)
   endif()
