@@ -95,10 +95,11 @@ class AttachSampleApplication : public ozz::sample::Application {
         joint * ozz::math::Float4x4::Translation(offset_);
 
     // Prepare rendering.
-    const float thickness = .01f;
-    const float length = .5f;
-    const ozz::math::Box box(ozz::math::Float3(-thickness, -thickness, -length),
-                             ozz::math::Float3(thickness, thickness, 0.f));
+    const float kThickness = .01f;
+    const float kLength = .5f;
+    const ozz::math::Box box(
+        ozz::math::Float3(-kThickness, 0.f, -kThickness),
+        ozz::math::Float3(kThickness, kLength, kThickness));
     const ozz::sample::Color colors[2] = {ozz::sample::kRed,
                                           ozz::sample::kGreen};
 
@@ -126,7 +127,7 @@ class AttachSampleApplication : public ozz::sample::Application {
     context_.Resize(num_joints);
 
     // Finds the joint where the object should be attached.
-    attachment_ = FindJoint(skeleton_, "LeftHandMiddle1");
+    attachment_ = FindJoint(skeleton_, "DEF-hand.R");
     if (attachment_ < 0) {
       return false;
     }
@@ -199,7 +200,7 @@ class AttachSampleApplication : public ozz::sample::Application {
   int attachment_ = 0;
 
   // Offset, translation of the attached object from the joint.
-  ozz::math::Float3 offset_ = {-.02f, .03f, .05f};
+  ozz::math::Float3 offset_ = {.02f, -.05f, .09f};
 };
 
 int main(int _argc, const char** _argv) {

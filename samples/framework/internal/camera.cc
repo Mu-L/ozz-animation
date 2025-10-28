@@ -50,7 +50,7 @@ namespace internal {
 const float kDefaultDistance = 8.f;
 const Float3 kDefaultCenter = Float3(0.f, .5f, 0.f);
 const Float2 kDefaultAngle =
-    Float2(-ozz::math::kPi * 1.f / 12.f, ozz::math::kPi * 1.f / 5.f);
+    Float2(-ozz::math::kPi * .1f, ozz::math::kPi * .9f);
 const float kAngleFactor = .01f;
 const float kDistanceFactor = .1f;
 const float kScrollFactor = .03f;

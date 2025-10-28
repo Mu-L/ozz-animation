@@ -180,7 +180,7 @@ class PartialBlendSampleApplication : public ozz::sample::Application {
     models_.resize(num_joints);
 
     // Finds the "Spine1" joint in the joint hierarchy.
-    upper_body_root_ = FindJoint(skeleton_, "Spine1");
+    upper_body_root_ = FindJoint(skeleton_, "DEF-spine.002");
     if (upper_body_root_ < 0) {
       return false;
     }

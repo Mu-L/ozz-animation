@@ -256,6 +256,15 @@ class SkinningSampleApplication : public ozz::sample::Application {
                                        ozz::math::Float4x4::identity(), _bound);
   }
 
+  virtual bool GetCameraInitialSetup(ozz::math::Float3* _center,
+                                     ozz::math::Float2* _angles,
+                                     float* _distance) const {
+    *_center = ozz::math::Float3(4.7f, 2.3f, -.13f);
+    *_angles = ozz::math::Float2(-ozz::math::kPi * 1.f / 15.f, 0.f);
+    *_distance = 0.f;
+    return true;
+  }
+
  private:
   // Playback animation controller. This is a utility class that helps with
   // controlling animation playback time.

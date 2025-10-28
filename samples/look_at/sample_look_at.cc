@@ -35,6 +35,7 @@
 #include "ozz/animation/runtime/local_to_model_job.h"
 #include "ozz/animation/runtime/sampling_job.h"
 #include "ozz/animation/runtime/skeleton.h"
+#include "ozz/animation/runtime/skeleton_utils.h"
 #include "ozz/base/log.h"
 #include "ozz/base/maths/box.h"
 #include "ozz/base/maths/simd_math.h"
@@ -61,9 +62,9 @@ OZZ_OPTIONS_DECLARE_STRING(mesh,
 // Defines IK chain joint names.
 // Joints must be from the same hierarchy (all ancestors of the first joint
 // listed) and ordered from child to parent.
-const char* kJointChainFirst = "Spine1";
-const char* kJointChainLast = "Head";
-const auto kJointChainLocalUpAxis = ozz::math::simd_float4::x_axis();
+const char* kJointChainFirst = "DEF-spine.002";
+const char* kJointChainLast = "DEF-head";
+const auto kJointChainLocalUpAxis = ozz::math::simd_float4::z_axis();
 
 // Forward vector in head local-space.
 const ozz::math::SimdFloat4 kHeadForward = ozz::math::simd_float4::y_axis();
@@ -272,14 +273,8 @@ class LookAtSampleApplication : public ozz::sample::Application {
 
     // Build joint chain, starting from the end, appending each parent up to the
     // first.
-    int last_joint = 0;
-    for (; last_joint < skeleton_.num_joints(); ++last_joint) {
-      const char* joint_name = skeleton_.joint_names()[last_joint];
-      if (std::strcmp(joint_name, kJointChainLast) == 0) {
-        break;
-      }
-    }
-    if (last_joint == skeleton_.num_joints()) {
+    const int last_joint = FindJoint(skeleton_, kJointChainLast);
+    if (last_joint < 0) {
       ozz::log::Err() << "Last joint of the chain " +
                              std::string(kJointChainLast) +
                              " not found in skeleton hierarchy."
@@ -412,7 +407,7 @@ class LookAtSampleApplication : public ozz::sample::Application {
   }
 
   virtual void GetSceneBounds(ozz::math::Box* _bound) const {
-    const ozz::math::Float3 radius(target_extent_ * .8f);
+    const ozz::math::Float3 radius(target_extent_ * .5f);
     _bound->min = target_offset_ - radius;
     _bound->max = target_offset_ + radius;
   }
@@ -452,12 +447,12 @@ class LookAtSampleApplication : public ozz::sample::Application {
   // Sample settings
 
   // Target position management.
-  ozz::math::Float3 target_offset_ = {.2f, 1.5f, -.3f};
+  ozz::math::Float3 target_offset_ = {.2f, 2.f, -1.4f};
   float target_extent_ = 1.f;
   ozz::math::Float3 target_;
 
   // Offset of the look at position in (head) joint local-space.
-  ozz::math::Float3 eyes_offset_ = {.07f, .1f, 0.f};
+  ozz::math::Float3 eyes_offset_ = {0.f, .12f, .14f};
 
   // IK settings
 
@@ -469,7 +464,7 @@ class LookAtSampleApplication : public ozz::sample::Application {
 
   // Weight given to every joint of the chain. If any joint has a weight of 1,
   // no other following joint will contribute (as the target will be reached).
-  float joint_weight_ = .5f;
+  float joint_weight_ = .35f;
 
   // Overall weight given to the IK on the full chain. This allows blending in
   // and out of IK.
