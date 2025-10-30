@@ -343,7 +343,8 @@ class LookAtSampleApplication : public ozz::sample::Application {
 
     _im_gui->DoCheckBox("Enable ik", &enable_ik_);
     snprintf(label, sizeof(label), "IK chain length: %d", chain_length_);
-    _im_gui->DoSlider(label, 0, joints_chain_.size(), &chain_length_);
+    _im_gui->DoSlider(label, 0, static_cast<int>(joints_chain_.size()),
+                      &chain_length_);
     snprintf(label, sizeof(label), "Joint weight %.2g", joint_weight_);
     _im_gui->DoSlider(label, 0.f, 1.f, &joint_weight_);
     snprintf(label, sizeof(label), "Chain weight %.2g", chain_weight_);

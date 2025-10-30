@@ -136,9 +136,15 @@ bool SampleAnimation(const RawAnimation& _animation, float _time,
     return false;
   }
 
+  // Samples each track.
   for (size_t i = 0; i < _animation.tracks.size(); ++i) {
     SampleTrack_NoValidate(_animation.tracks[i], _time,
                            _transforms.begin() + i);
+  }
+
+  // Fills remaining transforms with identity.
+  for (size_t i = _animation.tracks.size(); i < _transforms.size(); ++i) {
+    _transforms[i] = ozz::math::Transform::identity();
   }
   return true;
 }

@@ -223,6 +223,17 @@ TEST(SamplingAnimation, Utils) {
       ozz::animation::offline::SampleAnimation(raw_animation, 3.f, output));
   EXPECT_FLOAT3_EQ(output[0].translation, -1.f, 0.f, 0.f);
   EXPECT_FLOAT3_EQ(output[1].translation, 8.f, 0.f, 0.f);
+
+  {  // Bigger output set to identity
+    ozz::math::Transform bigger[3];
+    ASSERT_TRUE(
+        ozz::animation::offline::SampleAnimation(raw_animation, 0.f, bigger));
+    EXPECT_FLOAT3_EQ(bigger[0].translation, -1.f, 0.f, 0.f);
+    EXPECT_FLOAT3_EQ(bigger[1].translation, 2.f, 0.f, 0.f);
+    EXPECT_FLOAT3_EQ(bigger[2].translation, 0.f, 0.f, 0.f);
+    EXPECT_QUATERNION_EQ(bigger[2].rotation, 0.f, 0.f, 0.f, 1.f);
+    EXPECT_FLOAT3_EQ(bigger[2].scale, 1.f, 1.f, 1.f);
+  }
 }
 
 TEST(FixedRateSamplingTime, Utils) {
