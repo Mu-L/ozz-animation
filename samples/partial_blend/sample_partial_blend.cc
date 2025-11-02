@@ -39,6 +39,7 @@
 #include "ozz/animation/runtime/skeleton_utils.h"
 #include "ozz/base/containers/vector.h"
 #include "ozz/base/log.h"
+#include "ozz/base/maths/box.h"
 #include "ozz/base/maths/simd_math.h"
 #include "ozz/base/maths/soa_transform.h"
 #include "ozz/base/maths/vec_float.h"
@@ -324,9 +325,9 @@ class PartialBlendSampleApplication : public ozz::sample::Application {
     return true;
   }
 
-  virtual void GetSceneBounds(ozz::math::Box* _bound) const {
-    ozz::sample::ComputePostureBounds(make_span(models_),
-                                      ozz::math::Float4x4::identity(), _bound);
+  virtual ozz::math::Box GetSceneBounds() const {
+    return ozz::sample::ComputePostureBounds(make_span(models_),
+                                             ozz::math::Float4x4::identity());
   }
 
  private:

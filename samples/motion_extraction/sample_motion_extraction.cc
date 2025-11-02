@@ -345,8 +345,8 @@ class MotionExtractionSampleApplication : public ozz::sample::Application {
     return true;
   }
 
-  virtual void GetSceneBounds(ozz::math::Box* _bound) const {
-    ozz::sample::ComputePostureBounds(make_span(models_), transform_, _bound);
+  virtual ozz::math::Box GetSceneBounds() const {
+    return ozz::sample::ComputePostureBounds(make_span(models_), transform_);
   }
 
  private:

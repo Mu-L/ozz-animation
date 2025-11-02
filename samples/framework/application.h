@@ -137,7 +137,7 @@ class Application {
   // the camera to frame all the scene.
   // This function is never called before a first OnUpdate.
   // If _bound is set to "invalid", then camera won't be updated.
-  virtual void GetSceneBounds(math::Box* _bound) const;
+  virtual ozz::math::Box GetSceneBounds() const;
 
   // Implements framework internal loop function.
   bool Loop();

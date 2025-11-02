@@ -274,7 +274,7 @@ class AdditiveBlendSampleApplication : public ozz::sample::Application {
     return true;
   }
 
-  virtual void GetSceneBounds(ozz::math::Box* _bound) const {
+  virtual ozz::math::Box GetSceneBounds() const {
     // Finds the "hand" joint in the joint hierarchy.
     const int hand = FindJoint(skeleton_, "Lefthand");
 
@@ -284,11 +284,10 @@ class AdditiveBlendSampleApplication : public ozz::sample::Application {
       ozz::math::Float3 hand_position;
       ozz::math::Store3PtrU(hand_matrix.cols[3], &hand_position.x);
       const ozz::math::Float3 extent(.15f);
-      _bound->min = hand_position - extent;
-      _bound->max = hand_position + extent;
+      return {hand_position - extent, hand_position + extent};
     } else {
-      ozz::sample::ComputePostureBounds(
-          make_span(models_), ozz::math::Float4x4::identity(), _bound);
+      return ozz::sample::ComputePostureBounds(make_span(models_),
+                                               ozz::math::Float4x4::identity());
     }
   }
 

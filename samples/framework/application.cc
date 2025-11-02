@@ -443,8 +443,7 @@ bool Application::Idle(bool _first_frame) {
 
   // Update camera model-view matrix.
   if (camera_) {
-    math::Box scene_bounds;
-    GetSceneBounds(&scene_bounds);
+    const auto scene_bounds = GetSceneBounds();
 
     math::Float4x4 camera_transform;
     if (GetCameraOverride(&camera_transform)) {
@@ -707,7 +706,7 @@ bool Application::GetCameraOverride(math::Float4x4* _transform) const {
   return false;
 }
 
-void Application::GetSceneBounds(math::Box* _bound) const { (void)_bound; }
+math::Box Application::GetSceneBounds() const { return {}; }
 
 math::Float2 Application::WorldToScreen(const math::Float3& _world) const {
   const math::SimdFloat4 ndc =

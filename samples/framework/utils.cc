@@ -37,6 +37,7 @@
 #include "ozz/animation/runtime/animation.h"
 #include "ozz/animation/runtime/local_to_model_job.h"
 #include "ozz/animation/runtime/skeleton.h"
+#include "ozz/animation/runtime/skeleton_utils.h"
 #include "ozz/animation/runtime/track.h"
 #include "ozz/base/io/archive.h"
 #include "ozz/base/io/stream.h"
@@ -206,46 +207,20 @@ bool RawSkeletonEditor::OnGui(animation::offline::RawSkeleton* _skeleton,
 
 // Uses LocalToModelJob to compute skeleton model space posture, then forwards
 // to ComputePostureBounds
-void ComputeSkeletonBounds(const animation::Skeleton& _skeleton,
-                           const ozz::math::Float4x4& _transform,
-                           math::Box* _bound) {
-  using ozz::math::Float4x4;
-
-  assert(_bound);
-
-  // Set a default box.
-  *_bound = ozz::math::Box();
-
-  const int num_joints = _skeleton.num_joints();
-  if (!num_joints) {
-    return;
-  }
-
-  // Allocate matrix array, out of memory is handled by the LocalToModelJob.
-  ozz::vector<ozz::math::Float4x4> models(num_joints);
-
-  // Compute model space rest pose.
-  ozz::animation::LocalToModelJob job;
-  job.input = _skeleton.joint_rest_poses();
-  job.output = make_span(models);
-  job.skeleton = &_skeleton;
-  if (job.Run()) {
-    // Forwards to posture function.
-    ComputePostureBounds(job.output, _transform, _bound);
-  }
+math::Box ComputeSkeletonBounds(const animation::Skeleton& _skeleton,
+                                const ozz::math::Float4x4& _transform) {
+  const auto models = ozz::animation::GetRestPoseModelSpace(_skeleton);
+  return ComputePostureBounds(make_span(models), _transform);
 }
 
 // Loop through matrices and collect min and max bounds.
-void ComputePostureBounds(ozz::span<const ozz::math::Float4x4> _models,
-                          const ozz::math::Float4x4& _transform,
-                          math::Box* _bound) {
-  assert(_bound);
-
+math::Box ComputePostureBounds(ozz::span<const ozz::math::Float4x4> _models,
+                               const ozz::math::Float4x4& _transform) {
   // Set a default box.
-  *_bound = ozz::math::Box();
+  auto bound = ozz::math::Box();
 
   if (_models.empty()) {
-    return;
+    return bound;
   }
 
   // Loops through matrices and stores min/max.
@@ -260,10 +235,10 @@ void ComputePostureBounds(ozz::span<const ozz::math::Float4x4> _models,
   }
 
   // Stores in math::Box structure.
-  math::Store3PtrU(min, &_bound->min.x);
-  math::Store3PtrU(max, &_bound->max.x);
+  math::Store3PtrU(min, &bound.min.x);
+  math::Store3PtrU(max, &bound.max.x);
 
-  return;
+  return bound;
 }
 
 void MultiplySoATransformQuaternion(
