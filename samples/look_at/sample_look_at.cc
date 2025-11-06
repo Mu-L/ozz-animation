@@ -133,8 +133,9 @@ class LookAtSampleApplication : public ozz::sample::Application {
     // need to be updated between each pass, as joints are ordered from child to
     // parent.
     int previous_joint = ozz::animation::Skeleton::kNoParent;
-    for (int i = 0, joint = joints_chain_[0]; i < chain_length_;
-         ++i, previous_joint = joint, joint = joints_chain_[i]) {
+    for (int i = 0, joint; i < chain_length_; ++i, previous_joint = joint) {
+      joint = joints_chain_[i];
+
       // Setups the model-space matrix of the joint being processed by IK.
       ik_job.joint = &models_[joint];
 
