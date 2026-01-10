@@ -79,10 +79,30 @@ int PlaybackController::set_time_ratio(float _ratio) {
   //  backward.
   previous_time_ratio_ = time_ratio_;
   if (loop_) {
-    // Wraps in the unit interval [0:1]
-    const float loops = floorf(_ratio);
-    time_ratio_ = _ratio - loops;
-    return static_cast<int>(loops);
+    // Split into integral and fractional parts.
+    // frac in (-1,1), loopsf is integral part as float
+    float loopsf = 0.0f;
+    float frac = std::modff(_ratio, &loopsf);
+
+    constexpr float eps = 1e-6f;
+    if (std::fabs(frac) < eps) {
+      // Exact integer case: handle 0 separately.
+      if (std::fabs(_ratio) < eps) {
+        // _ratio == 0 -> start of the first loop
+        frac = 0.0f;
+        // loopsf stays 0
+      } else {  // Exact non-zero integer -> end of the previous loop
+        frac = 1.0f;
+        loopsf -= 1.0f;
+      }
+    } else if (frac < 0.0f) {
+      // Normalize negatives into [0,1] by shifting one loop back.
+      frac += 1.0f;
+      loopsf -= 1.0f;
+    }
+
+    time_ratio_ = frac;
+    return static_cast<int>(loopsf);
   } else {
     // Clamps in the unit interval [0:1].
     time_ratio_ = math::Clamp(0.f, _ratio, 1.f);
