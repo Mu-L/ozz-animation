@@ -261,7 +261,7 @@ Application::LoopStatus Application::OneLoop(int _loops) {
   }
 
   // Test for an exit request.
-  if (OPTIONS_max_idle_loops > 0 && _loops > OPTIONS_max_idle_loops) {
+  if (OPTIONS_max_idle_loops >= 0 && _loops > OPTIONS_max_idle_loops) {
     return kBreak;
   }
 
