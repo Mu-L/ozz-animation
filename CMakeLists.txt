@@ -90,10 +90,10 @@ if(ozz_build_tests)
 endif()
 
 # Locates media directory.
-set(ozz_media_directory "${PROJECT_SOURCE_DIR}/media")
+set(ozz_media_directory "${PROJECT_SOURCE_DIR}/media" CACHE PATH "Media directory")
 
 # Creates temporary directory for tests inputs/outputs.
-set(ozz_temp_directory ${PROJECT_BINARY_DIR}/temp)
+set(ozz_temp_directory "${PROJECT_BINARY_DIR}/temp" CACHE PATH "Temporary directory")
 file(MAKE_DIRECTORY ${ozz_temp_directory})
 
 # Outputs selected options (can be modified by the command line)
