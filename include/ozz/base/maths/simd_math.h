@@ -356,7 +356,7 @@ OZZ_INLINE SimdFloat4 Dot4(_SimdFloat4 _a, _SimdFloat4 _b);
 // r.x = _a.y * _b.z - _a.z * _b.y
 // r.y = _a.z * _b.x - _a.x * _b.z
 // r.z = _a.x * _b.y - _a.y * _b.x
-// r.w = ?
+// r.w = 0
 OZZ_INLINE SimdFloat4 Cross3(_SimdFloat4 _a, _SimdFloat4 _b);
 
 // Returns the per component estimated reciprocal of _v.
