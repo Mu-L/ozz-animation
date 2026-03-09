@@ -11,6 +11,7 @@ list(TRANSFORM animations_sample_path_list REPLACE "${animations_bin_path}/" "${
 
 add_custom_command(
   DEPENDS $<$<BOOL:${ozz_build_fbx}>:BUILD_DATA>
+          $<$<BOOL:${ozz_build_fbx}>:BUILD_DATA_SAMPLE>
           "${CMAKE_CURRENT_LIST_DIR}/README.md"
           "${ozz_media_directory}/bin/quaternius/skeleton.ozz"
           "${ozz_media_directory}/bin/quaternius/mesh.ozz"

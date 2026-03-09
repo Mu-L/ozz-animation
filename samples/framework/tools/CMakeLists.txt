@@ -41,6 +41,7 @@ if(ozz_build_fbx)
     "${ozz_media_directory}/bin/arnaud_mesh_4.ozz"
     "${ozz_media_directory}/bin/ruby_mesh.ozz"
     "${ozz_media_directory}/bin/floor.ozz"
+    "${ozz_media_directory}/bin/quaternius/mesh.ozz"
     VERBATIM)
 
   add_test(NAME sample_fbx2mesh COMMAND sample_fbx2mesh "--file=${ozz_media_directory}/fbx/pab/skeleton.fbx" "--skeleton=${ozz_media_directory}/bin/pab/skeleton.ozz" "--mesh=${ozz_temp_directory}/mesh.ozz")
