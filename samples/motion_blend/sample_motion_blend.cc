@@ -100,7 +100,6 @@ class MotionBlendSampleApplication : public ozz::sample::Application {
       // consistent last-current transforms). A more elaborated implementation
       // could teleport the accumulator as soon as the animation become useful
       // (aka weight > 0).
-
       // Updates motion accumulator.
       if (!sampler.motion_sampler.Update(
               sampler.motion_track, sampler.controller.time_ratio(), loops)) {
@@ -132,24 +131,30 @@ class MotionBlendSampleApplication : public ozz::sample::Application {
     // Blends motion.
     //-------------------------------------------------------------------------
     {
+      // Fills job layers with delta transforms and weights.
       ozz::animation::MotionBlendingJob::Layer layers[kNumLayers];
-      for (int i = 0; i < kNumLayers; ++i) {
+      for (size_t i = 0; i < kNumLayers; ++i) {
         const auto& sampler = samplers_[i];
-        layers[i].transform = &sampler.motion_sampler.delta;
-        layers[i].weight = sampler.weight;
+        layers[i].delta =
+            &sampler.motion_sampler.delta;  // Uses delta transform from motion
+                                            // sampler accumulator.
+        layers[i].weight = sampler.weight;  // Reuses animation weight.
       }
 
+      // Setup blending job.
       ozz::math::Transform delta;
       ozz::animation::MotionBlendingJob motion_blend_job;
       motion_blend_job.layers = layers;
       motion_blend_job.output = &delta;
 
-      // Blends.
+      // Executes blending job.
       if (!motion_blend_job.Run()) {
         return false;
       }
 
-      accumulator_.Update(delta, FrameRotation(_dt));
+      // Applies blended delta to the character accumulator.
+      const auto rotation = FrameRotation(_dt);
+      accumulator_.Update(delta, rotation);
     }
 
     // Updates the character transform matrix.
@@ -161,12 +166,12 @@ class MotionBlendSampleApplication : public ozz::sample::Application {
     //-------------------------------------------------------------------------
     // Blends the local spaces transforms computed by sampling all animations
     // (1st stage just above), and outputs the result to the local space
-    // transform buffer blended_locals_
+    // transform buffer locals_
 
     {
       // Prepares blending layers.
       ozz::animation::BlendingJob::Layer layers[kNumLayers];
-      for (int i = 0; i < kNumLayers; ++i) {
+      for (size_t i = 0; i < kNumLayers; ++i) {
         layers[i].transform = make_span(samplers_[i].locals);
         layers[i].weight = samplers_[i].weight;
       }
@@ -175,7 +180,7 @@ class MotionBlendSampleApplication : public ozz::sample::Application {
       ozz::animation::BlendingJob blend_job;
       blend_job.layers = layers;
       blend_job.rest_pose = skeleton_.joint_rest_poses();
-      blend_job.output = make_span(blended_locals_);
+      blend_job.output = make_span(locals_);
 
       // Blends.
       if (!blend_job.Run()) {
@@ -188,7 +193,7 @@ class MotionBlendSampleApplication : public ozz::sample::Application {
     // Setup local-to-model conversion job.
     ozz::animation::LocalToModelJob ltm_job;
     ltm_job.skeleton = &skeleton_;
-    ltm_job.input = make_span(blended_locals_);
+    ltm_job.input = make_span(locals_);
     ltm_job.output = make_span(models_);
 
     // Runs ltm job.
@@ -211,7 +216,7 @@ class MotionBlendSampleApplication : public ozz::sample::Application {
     // Computes weight parameters for all samplers.
     const float kNumIntervals = kNumLayers - 1;
     const float kInterval = 1.f / kNumIntervals;
-    for (int i = 0; i < kNumLayers; ++i) {
+    for (size_t i = 0; i < kNumLayers; ++i) {
       const float med = i * kInterval;
       const float x = blend_ratio_ - med;
       const float y = ((x < 0.f ? x : -x) + kInterval) * kNumIntervals;
@@ -219,15 +224,11 @@ class MotionBlendSampleApplication : public ozz::sample::Application {
     }
 
     // Synchronizes animations.
-    // First computes loop cycle duration. Selects the 2 samplers that define
-    // interval that contains blend_ratio_.
-    // Uses a maximum value smaller that 1.f (-epsilon) to ensure that
-    // (relevant_sampler + 1) is always valid.
-    const int relevant_sampler =
-        static_cast<int>((blend_ratio_ - 1e-3f) * (kNumLayers - 1));
-    assert(relevant_sampler + 1 < kNumLayers);
-    Sampler& sampler_l = samplers_[relevant_sampler];
-    Sampler& sampler_r = samplers_[relevant_sampler + 1];
+    // Selects the 2 samplers that define interval that contains blend_ratio_.
+    const float clamped_ratio = ozz::math::Clamp(0.f, blend_ratio_, .999f);
+    const size_t lower = static_cast<size_t>(clamped_ratio * (kNumLayers - 1));
+    const Sampler& sampler_l = samplers_[lower];
+    const Sampler& sampler_r = samplers_[lower + 1];
 
     // Interpolates animation durations using their respective weights, to
     // find the loop cycle duration that matches blend_ratio_.
@@ -244,8 +245,31 @@ class MotionBlendSampleApplication : public ozz::sample::Application {
   }
 
   virtual bool OnDisplay(ozz::sample::Renderer* _renderer) {
+    bool success = true;
     // Renders character at transform_ location.
-    return _renderer->DrawPosture(skeleton_, make_span(models_), transform_);
+    success |=
+        _renderer->DrawPosture(skeleton_, make_span(models_), transform_);
+
+    // Draw a box at character's root.
+    if (show_box_) {
+      const ozz::math::Box box(ozz::math::Float3(-.25f, 0, -.25f),
+                               ozz::math::Float3(.25f, 1.8f, .25f));
+      success &= _renderer->DrawBoxIm(box, transform_, ozz::sample::kWhite);
+    }
+
+    // Renders motion tracks at transform_ location.
+    if (show_motion_) {
+      const float kStep = 1.f / 60.f;
+      for (const auto& sampler : samplers_) {
+        const auto rotation =
+            FrameRotation(kStep * sampler.animation.duration());
+        const float at = sampler.controller.time_ratio();
+        success |= ozz::sample::DrawMotion(
+            _renderer, sampler.motion_track, at - 1.f, at, at + 1.f, kStep,
+            transform_, rotation, sampler.weight);
+      }
+    }
+    return success;
   }
 
   virtual bool OnInitialize() {
@@ -264,7 +288,7 @@ class MotionBlendSampleApplication : public ozz::sample::Application {
     static_assert(OZZ_ARRAY_SIZE(animations) == kNumLayers &&
                       OZZ_ARRAY_SIZE(motions) == kNumLayers,
                   "Arrays mismatch.");
-    for (int i = 0; i < kNumLayers; ++i) {
+    for (size_t i = 0; i < kNumLayers; ++i) {
       Sampler& sampler = samplers_[i];
 
       if (!ozz::sample::LoadAnimation(animations[i], &sampler.animation)) {
@@ -283,15 +307,13 @@ class MotionBlendSampleApplication : public ozz::sample::Application {
     }
 
     // Allocates local space runtime buffers of blended data.
-    blended_locals_.resize(num_soa_joints);
+    locals_.resize(num_soa_joints);
 
     // Allocates model space runtime buffers of blended data.
     models_.resize(num_joints);
 
     return true;
   }
-
-  virtual void OnDestroy() {}
 
   virtual bool OnGui(ozz::sample::ImGui* _im_gui) {
     char label[64];
@@ -311,10 +333,10 @@ class MotionBlendSampleApplication : public ozz::sample::Application {
         std::snprintf(label, sizeof(label), "Blend ratio: %.2f", blend_ratio_);
         _im_gui->DoSlider(label, 0.f, 1.f, &blend_ratio_, 1.f, !manual_);
 
-        for (int i = 0; i < kNumLayers; ++i) {
+        for (size_t i = 0; i < kNumLayers; ++i) {
           Sampler& sampler = samplers_[i];
-          std::snprintf(label, sizeof(label), "Weight %d: %.2f", i,
-                        sampler.weight);
+          std::snprintf(label, sizeof(label), "Weight %d: %.2f",
+                        static_cast<int>(i), sampler.weight);
           _im_gui->DoSlider(label, 0.f, 1.f, &sampler.weight, 1.f, manual_);
         }
       }
@@ -331,7 +353,7 @@ class MotionBlendSampleApplication : public ozz::sample::Application {
         const char* oc_names[] = {"Animation 1", "Animation 2", "Animation 3"};
         static_assert(OZZ_ARRAY_SIZE(oc_names) == kNumLayers,
                       "Arrays size mismatch");
-        for (int i = 0; i < kNumLayers; ++i) {
+        for (size_t i = 0; i < kNumLayers; ++i) {
           Sampler& sampler = samplers_[i];
           ozz::sample::ImGui::OpenClose loc(_im_gui, oc_names[i], nullptr);
           if (open[i]) {
@@ -345,19 +367,26 @@ class MotionBlendSampleApplication : public ozz::sample::Application {
       static bool open = true;
       ozz::sample::ImGui::OpenClose oc(_im_gui, "Motion control", &open);
       if (open) {
-        // _im_gui->DoCheckBox("Use motion position",
-        // &apply_motion_position_); _im_gui->DoCheckBox("Use motion
-        // rotation", &apply_motion_rotation_);
         std::snprintf(label, sizeof(label), "Angular vel: %.0f deg/s",
                       angular_velocity_ * 180.f / ozz::math::kPi);
         _im_gui->DoSlider(label, -ozz::math::kPi_2, ozz::math::kPi_2,
                           &angular_velocity_);
         if (_im_gui->DoButton("Teleport")) {
           for (auto& sampler : samplers_) {
+            sampler.controller.set_time_ratio(0.f);
             sampler.motion_sampler.Teleport(ozz::math::Transform::identity());
           }
           accumulator_.Teleport(ozz::math::Transform::identity());
         }
+      }
+    }
+
+    {
+      static bool open = true;
+      ozz::sample::ImGui::OpenClose oc(_im_gui, "Motion display", &open);
+      if (open) {
+        _im_gui->DoCheckBox("Show box", &show_box_);
+        _im_gui->DoCheckBox("Show motion", &show_motion_);
       }
     }
 
@@ -381,9 +410,7 @@ class MotionBlendSampleApplication : public ozz::sample::Application {
   bool manual_ = false;
 
   // The number of layers to blend.
-  enum {
-    kNumLayers = 3,
-  };
+  static constexpr size_t kNumLayers = 3;
 
   // Sampler structure contains all the data required to sample a single
   // animation.
@@ -411,7 +438,7 @@ class MotionBlendSampleApplication : public ozz::sample::Application {
   } samplers_[kNumLayers];  // kNumLayers animations to blend.
 
   // Buffer of local transforms which stores the blending result.
-  ozz::vector<ozz::math::SoaTransform> blended_locals_;
+  ozz::vector<ozz::math::SoaTransform> locals_;
 
   // Buffer of model space matrices. These are computed by the local-to-model
   // job after the blending stage.
@@ -426,6 +453,14 @@ class MotionBlendSampleApplication : public ozz::sample::Application {
 
   // Character transform.
   ozz::math::Float4x4 transform_;
+
+  // UI options.
+
+  // Show motion tracks.
+  bool show_motion_ = true;
+
+  // Show box at root transform
+  bool show_box_ = true;
 };
 
 int main(int _argc, const char** _argv) {

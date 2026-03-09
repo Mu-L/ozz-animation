@@ -2,8 +2,8 @@ name: Linux
 on: [push, pull_request]
 jobs:
   build:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -14,10 +14,6 @@ jobs:
           - build_type: Release
             option: default
           - build_type: Debug
-            option: gcc11
-            compiler_c: gcc-11
-            compiler_cxx: g++-11
-          - build_type: Debug
             option: gcc12
             compiler_c: gcc-12
             compiler_cxx: g++-12
@@ -25,18 +21,14 @@ jobs:
             option: gcc13
             compiler_c: gcc-13
             compiler_cxx: g++-13
+          - build_type: Debug
+            option: gcc14
+            compiler_c: gcc-14
+            compiler_cxx: g++-14
           - build_type: Release
-            option: gcc13
-            compiler_c: gcc-13
-            compiler_cxx: g++-13
-          - build_type: Debug
-            option: clang14
-            compiler_c: clang-14
-            compiler_cxx: clang++-14
-          - build_type: Debug
-            option: clang15
-            compiler_c: clang-15
-            compiler_cxx: clang++-15
+            option: gcc14
+            compiler_c: gcc-14
+            compiler_cxx: g++-14
           - build_type: Debug
             option: clang16
             compiler_c: clang-16

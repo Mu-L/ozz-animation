@@ -46,10 +46,10 @@ TEST(Validate, MotionBlendingJob) {
   EXPECT_FALSE(job.Validate());
 
   ozz::math::Transform transforms[2];
-  layers[0].transform = &transforms[0];
+  layers[0].delta = &transforms[0];
   EXPECT_FALSE(job.Validate());
 
-  layers[1].transform = &transforms[1];
+  layers[1].delta = &transforms[1];
   EXPECT_TRUE(job.Validate());
 }
 
@@ -70,6 +70,13 @@ TEST(Run, MotionBlendingJob) {
   ozz::math::Transform output;
   job.output = &output;
 
+  // No layer
+  EXPECT_TRUE(job.Run());
+  EXPECT_FLOAT3_EQ(output.translation, 0.f, 0.f, 0.f);
+  EXPECT_QUATERNION_EQ(output.rotation, 0.f, 0.f, 0.f, 1.f);
+  EXPECT_FLOAT3_EQ(output.scale, 1.f, 1.f, 1.f);
+
+  // With layers
   ozz::math::Transform transforms[2];
 
   transforms[0].translation = {2.f, 0.f, 0.f};
@@ -79,8 +86,8 @@ TEST(Run, MotionBlendingJob) {
   transforms[1].rotation = {-0.f, -.70710677f, -0.f, -.70710677f};
 
   MotionBlendingJob::Layer layers[2];
-  layers[0].transform = &transforms[0];
-  layers[1].transform = &transforms[1];
+  layers[0].delta = &transforms[0];
+  layers[1].delta = &transforms[1];
   job.layers = layers;
 
   // 0 weights
@@ -118,7 +125,7 @@ TEST(Run, MotionBlendingJob) {
 
   EXPECT_TRUE(job.Run());
 
-  EXPECT_FLOAT3_EQ(output.translation, 1.76f, 0.f, .44f);
+  EXPECT_FLOAT3_EQ(output.translation, 2.134313f, 0.f, .533578f);
   EXPECT_QUATERNION_EQ(output.rotation, .6172133f, .1543033f, 0.f, .7715167f);
   EXPECT_FLOAT3_EQ(output.scale, 1.f, 1.f, 1.f);
 
@@ -128,7 +135,7 @@ TEST(Run, MotionBlendingJob) {
 
   EXPECT_TRUE(job.Run());
 
-  EXPECT_FLOAT3_EQ(output.translation, 1.76f, 0.f, .44f);
+  EXPECT_FLOAT3_EQ(output.translation, 2.134313f, 0.f, .533578f);
   EXPECT_QUATERNION_EQ(output.rotation, .6172133f, .1543033f, 0.f, .7715167f);
   EXPECT_FLOAT3_EQ(output.scale, 1.f, 1.f, 1.f);
 
@@ -138,7 +145,31 @@ TEST(Run, MotionBlendingJob) {
 
   EXPECT_TRUE(job.Run());
 
-  EXPECT_FLOAT3_EQ(output.translation, 1.76f, 0.f, .44f);
+  EXPECT_FLOAT3_EQ(output.translation, 2.134313f, 0.f, .533578f);
   EXPECT_QUATERNION_EQ(output.rotation, .6172133f, .1543033f, 0.f, .7715167f);
+  EXPECT_FLOAT3_EQ(output.scale, 1.f, 1.f, 1.f);
+
+  // 0 length translation
+  transforms[0].translation = {0.f, 0.f, 0.f};
+  transforms[1].translation = {0.f, 0.f, 2.f};
+  layers[0].weight = .8f;
+  layers[1].weight = .2f;
+
+  EXPECT_TRUE(job.Run());
+
+  EXPECT_FLOAT3_EQ(output.translation, 0.f, 0.f, .4f);
+  EXPECT_QUATERNION_EQ(output.rotation, .6172133f, .1543033f, 0.f, .7715167f);
+  EXPECT_FLOAT3_EQ(output.scale, 1.f, 1.f, 1.f);
+
+  // Opposed translations
+  transforms[0].translation = {0.f, 0.f, -2.f};
+  transforms[1].translation = {0.f, 0.f, 2.f};
+  layers[0].weight = 1.f;
+  layers[1].weight = 1.f;
+
+  EXPECT_TRUE(job.Run());
+
+  EXPECT_FLOAT3_EQ(output.translation, 0.f, 0.f, 0.f);
+  EXPECT_QUATERNION_EQ(output.rotation, .408248f, .408248f, 0.f, .816496f);
   EXPECT_FLOAT3_EQ(output.scale, 1.f, 1.f, 1.f);
 }

@@ -57,17 +57,12 @@ bool TrackSamplingJob<_Track>::Run() const {
   assert(ratios.size() == values.size() &&
          track->steps().size() * 8 >= values.size());
 
-  // Default track returns identity.
-  if (ratios.size() == 0) {
+  if (ratios.size() == 0) {  // Default (empty) track returns identity.
     *result = internal::TrackPolicy<ValueType>::identity();
-    return true;
-  }
-
-  // Handles cases that do not require a search.
-  if (ratio <= 0.f) {
-    *result = values.data()[0];
+  } else if (ratios.size() == 1 || ratio <= 0.f) {
+    *result = values.front();
   } else if (ratio >= 1.f) {
-    *result = values.data()[values.size() - 1];
+    *result = values.back();
   } else {
     // Search for the first key frame with a ratio value greater than input
     // ratio. Our ratio is between this one and the previous one.

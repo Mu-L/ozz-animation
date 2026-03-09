@@ -31,7 +31,6 @@
 
 #include <cassert>
 #include <cstdio>
-#include <limits>
 
 #include "ozz/base/log.h"
 #include "ozz/base/maths/simd_math.h"
@@ -42,13 +41,13 @@ namespace internal {
 
 #ifdef EMSCRIPTEN
 // WebGL requires to specify floating point precision
-static const char* kPlatformSpecivicVSHeader =
+static const char* kPlatformSpecificVSHeader =
     "#version 300 es\n precision mediump float;\n";
-static const char* kPlatformSpecivicFSHeader =
+static const char* kPlatformSpecificFSHeader =
     "#version 300 es\n precision mediump float;\n";
 #else   // EMSCRIPTEN
-static const char* kPlatformSpecivicVSHeader = "#version 330\n";
-static const char* kPlatformSpecivicFSHeader = "#version 330\n";
+static const char* kPlatformSpecificVSHeader = "#version 330\n";
+static const char* kPlatformSpecificFSHeader = "#version 330\n";
 #endif  // EMSCRIPTEN
 
 void glUniformMat4(ozz::math::Float4x4 _mat4, GLint _uniform) {
@@ -203,8 +202,8 @@ ozz::unique_ptr<ImmediatePCShader> ImmediatePCShader::Build() {
       "  o_color = v_vertex_color;\n"
       "}\n";
 
-  const char* vs[] = {kPlatformSpecivicVSHeader, kSimplePCVS};
-  const char* fs[] = {kPlatformSpecivicFSHeader, kSimplePCPS};
+  const char* vs[] = {kPlatformSpecificVSHeader, kSimplePCVS};
+  const char* fs[] = {kPlatformSpecificFSHeader, kSimplePCPS};
 
   ozz::unique_ptr<ImmediatePCShader> shader = make_unique<ImmediatePCShader>();
   success &=
@@ -237,8 +236,8 @@ void ImmediatePCShader::Bind(const math::Float4x4& _model,
 
   const GLint color_attrib = attrib(1);
   GL(EnableVertexAttribArray(color_attrib));
-  GL(VertexAttribPointer(color_attrib, 4, GL_UNSIGNED_BYTE, GL_TRUE,
-                         _color_stride, GL_PTR_OFFSET(_color_offset)));
+  GL(VertexAttribPointer(color_attrib, 4, GL_FLOAT, GL_FALSE, _color_stride,
+                         GL_PTR_OFFSET(_color_offset)));
 
   // Binds mvp uniform
   glUniformMat4(_view_proj * _model, uniform(0));
@@ -271,8 +270,8 @@ ozz::unique_ptr<ImmediatePTCShader> ImmediatePTCShader::Build() {
       "  if(o_color.a < .01) discard;\n"  // Implements alpha testing.
       "}\n";
 
-  const char* vs[] = {kPlatformSpecivicVSHeader, kSimplePCVS};
-  const char* fs[] = {kPlatformSpecivicFSHeader, kSimplePCPS};
+  const char* vs[] = {kPlatformSpecificVSHeader, kSimplePCVS};
+  const char* fs[] = {kPlatformSpecificFSHeader, kSimplePCPS};
 
   ozz::unique_ptr<ImmediatePTCShader> shader =
       make_unique<ImmediatePTCShader>();
@@ -314,8 +313,8 @@ void ImmediatePTCShader::Bind(const math::Float4x4& _model,
 
   const GLint color_attrib = attrib(2);
   GL(EnableVertexAttribArray(color_attrib));
-  GL(VertexAttribPointer(color_attrib, 4, GL_UNSIGNED_BYTE, GL_TRUE,
-                         _color_stride, GL_PTR_OFFSET(_color_offset)));
+  GL(VertexAttribPointer(color_attrib, 4, GL_FLOAT, GL_FALSE, _color_stride,
+                         GL_PTR_OFFSET(_color_offset)));
 
   // Binds mvp uniform
   glUniformMat4(_view_proj * _model, uniform(0));
@@ -349,8 +348,8 @@ ozz::unique_ptr<PointsShader> PointsShader::Build() {
       "  o_color = v_vertex_color;\n"
       "}\n";
 
-  const char* vs[] = {kPlatformSpecivicVSHeader, kSimplePointsVS};
-  const char* fs[] = {kPlatformSpecivicFSHeader, kSimplePointsPS};
+  const char* vs[] = {kPlatformSpecificVSHeader, kSimplePointsVS};
+  const char* fs[] = {kPlatformSpecificFSHeader, kSimplePointsPS};
 
   ozz::unique_ptr<PointsShader> shader = make_unique<PointsShader>();
   success &=
@@ -387,8 +386,8 @@ PointsShader::GenericAttrib PointsShader::Bind(
   const GLint color_attrib = attrib(1);
   if (_color_stride) {
     GL(EnableVertexAttribArray(color_attrib));
-    GL(VertexAttribPointer(color_attrib, 4, GL_UNSIGNED_BYTE, GL_TRUE,
-                           _color_stride, GL_PTR_OFFSET(_color_offset)));
+    GL(VertexAttribPointer(color_attrib, 4, GL_FLOAT, GL_FALSE, _color_stride,
+                           GL_PTR_OFFSET(_color_offset)));
   }
   const GLint size_attrib = attrib(2);
   if (_size_stride) {
@@ -487,8 +486,8 @@ void SkeletonShader::Bind(const math::Float4x4& _model,
 
   const GLint color_attrib = attrib(2);
   GL(EnableVertexAttribArray(color_attrib));
-  GL(VertexAttribPointer(color_attrib, 4, GL_UNSIGNED_BYTE, GL_TRUE,
-                         _color_stride, GL_PTR_OFFSET(_color_offset)));
+  GL(VertexAttribPointer(color_attrib, 4, GL_FLOAT, GL_FALSE, _color_stride,
+                         GL_PTR_OFFSET(_color_offset)));
 
   // Binds vp uniform
   glUniformMat4(_model, uniform(0));
@@ -522,12 +521,13 @@ ozz::unique_ptr<JointShader> JointShader::Build() {
       "  world_matrix[3] = joint_matrix[3];\n"
       "  return u_model * world_matrix;\n"
       "}\n";
-  const char* vs[] = {kPlatformSpecivicVSHeader, kPassNoUv,
+
+  const char* vs[] = {kPlatformSpecificVSHeader, kPassNoUv,
                       GL_ARB_instanced_arrays_supported
                           ? "in mat4 joint;\n"
                           : "uniform mat4 joint;\n",
                       vs_joint_to_world_matrix, kShaderUberVS};
-  const char* fs[] = {kPlatformSpecivicFSHeader, kShaderAmbientFct,
+  const char* fs[] = {kPlatformSpecificFSHeader, kShaderAmbientFct,
                       kShaderAmbientFS};
 
   ozz::unique_ptr<JointShader> shader = make_unique<JointShader>();
@@ -586,12 +586,12 @@ BoneShader::Build() {  // Builds a world matrix from joint uniforms,
       "  world_matrix[3] = vec4(joint[3].xyz, 1.);\n"
       "  return u_model * world_matrix;\n"
       "}\n";
-  const char* vs[] = {kPlatformSpecivicVSHeader, kPassNoUv,
+  const char* vs[] = {kPlatformSpecificVSHeader, kPassNoUv,
                       GL_ARB_instanced_arrays_supported
                           ? "in mat4 joint;\n"
                           : "uniform mat4 joint;\n",
                       vs_joint_to_world_matrix, kShaderUberVS};
-  const char* fs[] = {kPlatformSpecivicFSHeader, kShaderAmbientFct,
+  const char* fs[] = {kPlatformSpecificFSHeader, kShaderAmbientFct,
                       kShaderAmbientFS};
 
   ozz::unique_ptr<BoneShader> shader = make_unique<BoneShader>();
@@ -621,11 +621,11 @@ BoneShader::Build() {  // Builds a world matrix from joint uniforms,
 }
 
 ozz::unique_ptr<AmbientShader> AmbientShader::Build() {
-  const char* vs[] = {kPlatformSpecivicVSHeader, kPassNoUv,
+  const char* vs[] = {kPlatformSpecificVSHeader, kPassNoUv,
                       "uniform mat4 u_model;\n"
                       "mat4 GetWorldMatrix() {return u_model;}\n",
                       kShaderUberVS};
-  const char* fs[] = {kPlatformSpecivicFSHeader, kShaderAmbientFct,
+  const char* fs[] = {kPlatformSpecificFSHeader, kShaderAmbientFct,
                       kShaderAmbientFS};
 
   ozz::unique_ptr<AmbientShader> shader = make_unique<AmbientShader>();
@@ -662,7 +662,7 @@ void AmbientShader::Bind(const math::Float4x4& _model,
                          const math::Float4x4& _view_proj, GLsizei _pos_stride,
                          GLsizei _pos_offset, GLsizei _normal_stride,
                          GLsizei _normal_offset, GLsizei _color_stride,
-                         GLsizei _color_offset) {
+                         GLsizei _color_offset, bool _color_float) {
   GL(UseProgram(program()));
 
   const GLint position_attrib = attrib(0);
@@ -672,13 +672,14 @@ void AmbientShader::Bind(const math::Float4x4& _model,
 
   const GLint normal_attrib = attrib(1);
   GL(EnableVertexAttribArray(normal_attrib));
-  GL(VertexAttribPointer(normal_attrib, 3, GL_FLOAT, GL_TRUE, _normal_stride,
+  GL(VertexAttribPointer(normal_attrib, 3, GL_FLOAT, GL_FALSE, _normal_stride,
                          GL_PTR_OFFSET(_normal_offset)));
 
   const GLint color_attrib = attrib(2);
   GL(EnableVertexAttribArray(color_attrib));
-  GL(VertexAttribPointer(color_attrib, 4, GL_UNSIGNED_BYTE, GL_TRUE,
-                         _color_stride, GL_PTR_OFFSET(_color_offset)));
+  GL(VertexAttribPointer(
+      color_attrib, 4, _color_float ? GL_FLOAT : GL_UNSIGNED_BYTE,
+      !_color_float, _color_stride, GL_PTR_OFFSET(_color_offset)));
 
   // Binds mw uniform
   glUniformMat4(_model, uniform(0));
@@ -690,10 +691,10 @@ void AmbientShader::Bind(const math::Float4x4& _model,
 ozz::unique_ptr<AmbientShaderInstanced> AmbientShaderInstanced::Build() {
   bool success = true;
 
-  const char* vs[] = {kPlatformSpecivicVSHeader, kPassNoUv,
+  const char* vs[] = {kPlatformSpecificVSHeader, kPassNoUv,
                       "in mat4 a_m;\n mat4 GetWorldMatrix() {return a_m;}\n",
                       kShaderUberVS};
-  const char* fs[] = {kPlatformSpecivicFSHeader, kShaderAmbientFct,
+  const char* fs[] = {kPlatformSpecificFSHeader, kShaderAmbientFct,
                       kShaderAmbientFS};
 
   ozz::unique_ptr<AmbientShaderInstanced> shader =
@@ -722,7 +723,7 @@ void AmbientShaderInstanced::Bind(GLsizei _models_offset,
                                   GLsizei _pos_stride, GLsizei _pos_offset,
                                   GLsizei _normal_stride,
                                   GLsizei _normal_offset, GLsizei _color_stride,
-                                  GLsizei _color_offset) {
+                                  GLsizei _color_offset, bool _color_float) {
   GL(UseProgram(program()));
 
   const GLint position_attrib = attrib(0);
@@ -732,16 +733,16 @@ void AmbientShaderInstanced::Bind(GLsizei _models_offset,
 
   const GLint normal_attrib = attrib(1);
   GL(EnableVertexAttribArray(normal_attrib));
-  GL(VertexAttribPointer(normal_attrib, 3, GL_FLOAT, GL_TRUE, _normal_stride,
+  GL(VertexAttribPointer(normal_attrib, 3, GL_FLOAT, GL_FALSE, _normal_stride,
                          GL_PTR_OFFSET(_normal_offset)));
 
   const GLint color_attrib = attrib(2);
   GL(EnableVertexAttribArray(color_attrib));
-  GL(VertexAttribPointer(color_attrib, 4, GL_UNSIGNED_BYTE, GL_TRUE,
-                         _color_stride, GL_PTR_OFFSET(_color_offset)));
+  GL(VertexAttribPointer(
+      color_attrib, 4, _color_float ? GL_FLOAT : GL_UNSIGNED_BYTE,
+      !_color_float, _color_stride, GL_PTR_OFFSET(_color_offset)));
   if (_color_stride == 0) {
-    GL(VertexAttribDivisor_(color_attrib,
-                            std::numeric_limits<unsigned int>::max()));
+    GL(VertexAttribDivisor_(color_attrib, 0xffffffff));
   }
 
   // Binds mw uniform
@@ -789,10 +790,10 @@ void AmbientShaderInstanced::Unbind() {
 
 ozz::unique_ptr<AmbientTexturedShader> AmbientTexturedShader::Build() {
   const char* vs[] = {
-      kPlatformSpecivicVSHeader, kPassUv,
+      kPlatformSpecificVSHeader, kPassUv,
       "uniform mat4 u_model;\n mat4 GetWorldMatrix() {return u_model;}\n",
       kShaderUberVS};
-  const char* fs[] = {kPlatformSpecivicFSHeader, kShaderAmbientFct,
+  const char* fs[] = {kPlatformSpecificFSHeader, kShaderAmbientFct,
                       kShaderAmbientTexturedFS};
 
   ozz::unique_ptr<AmbientTexturedShader> shader =
@@ -814,10 +815,11 @@ void AmbientTexturedShader::Bind(const math::Float4x4& _model,
                                  GLsizei _pos_stride, GLsizei _pos_offset,
                                  GLsizei _normal_stride, GLsizei _normal_offset,
                                  GLsizei _color_stride, GLsizei _color_offset,
-                                 GLsizei _uv_stride, GLsizei _uv_offset) {
+                                 bool _color_float, GLsizei _uv_stride,
+                                 GLsizei _uv_offset) {
   AmbientShader::Bind(_model, _view_proj, _pos_stride, _pos_offset,
                       _normal_stride, _normal_offset, _color_stride,
-                      _color_offset);
+                      _color_offset, _color_float);
 
   const GLint uv_attrib = attrib(3);
   GL(EnableVertexAttribArray(uv_attrib));

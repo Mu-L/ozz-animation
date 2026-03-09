@@ -71,6 +71,9 @@ struct MotionDeltaAccumulator {
   // Character's current transform.
   ozz::math::Transform current = ozz::math::Transform::identity();
 
+  // Delta transformation between last and current frame.
+  ozz::math::Transform delta = ozz::math::Transform::identity();
+
   // Accumulated rotation (since last teleport).
   ozz::math::Quaternion rotation_accum = ozz::math::Quaternion::identity();
 };
@@ -100,9 +103,6 @@ struct MotionAccumulator : public MotionDeltaAccumulator {
 
   // Last value sample from the motion track, used to compute delta.
   ozz::math::Transform last = ozz::math::Transform::identity();
-
-  // Delta transformation between last and current frame.
-  ozz::math::Transform delta = ozz::math::Transform::identity();
 };
 
 // Helper object samples a motion track to update a MotionAccumulator.
@@ -126,14 +126,16 @@ bool SampleMotion(const MotionTrack& _tracks, float _ratio,
 // _step is the delta ratio between each sample / point.
 bool DrawMotion(ozz::sample::Renderer* _renderer,
                 const MotionTrack& _motion_track, float _from, float _at,
-                float _to, float _step, const ozz::math::Float4x4& _transform);
+                float _to, float _step, const ozz::math::Float4x4& _transform,
+                float _alpha = 1.f);
 
 // See DrawMotion above. This version allows to apply a delta rotation to the
 // path, where _delta_rotation is the rotation to apply each step.
 bool DrawMotion(ozz::sample::Renderer* _renderer,
                 const MotionTrack& _motion_track, float _from, float _at,
                 float _to, float _step, const ozz::math::Float4x4& _transform,
-                const ozz::math::Quaternion& _delta_rotation);
+                const ozz::math::Quaternion& _delta_rotation,
+                float _alpha = 1.f);
 
 }  // namespace sample
 }  // namespace ozz

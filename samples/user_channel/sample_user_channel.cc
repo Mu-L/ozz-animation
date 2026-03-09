@@ -235,8 +235,8 @@ class UserChannelSampleApplication : public ozz::sample::Application {
         ozz::sample::kGrey);
 
     // Draws a sphere at hand position, which shows "attached" flag status.
-    const ozz::sample::Color colors[] = {{0, 0xff, 0, 0xff},
-                                         {0xff, 0, 0, 0xff}};
+    const ozz::sample::Color colors[] = {ozz::sample::kGreen,
+                                         ozz::sample::kWhite};
     _renderer->DrawSphereIm(.01f, models_[attach_joint_], colors[attached_]);
 
     // Draws the animated skeleton.
@@ -281,8 +281,6 @@ class UserChannelSampleApplication : public ozz::sample::Application {
 
     return true;
   }
-
-  virtual void OnDestroy() {}
 
   virtual bool OnGui(ozz::sample::ImGui* _im_gui) {
     // Exposes sample specific parameters.

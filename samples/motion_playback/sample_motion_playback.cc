@@ -34,8 +34,6 @@
 #include "ozz/animation/runtime/local_to_model_job.h"
 #include "ozz/animation/runtime/sampling_job.h"
 #include "ozz/animation/runtime/skeleton.h"
-#include "ozz/animation/runtime/track.h"
-#include "ozz/animation/runtime/track_sampling_job.h"
 #include "ozz/base/log.h"
 #include "ozz/base/maths/box.h"
 #include "ozz/base/maths/simd_math.h"
@@ -186,8 +184,6 @@ class MotionPlaybackSampleApplication : public ozz::sample::Application {
     return true;
   }
 
-  virtual void OnDestroy() {}
-
   virtual bool OnGui(ozz::sample::ImGui* _im_gui) {
     char label[64];
     // Exposes animation runtime playback controls.
@@ -203,14 +199,15 @@ class MotionPlaybackSampleApplication : public ozz::sample::Application {
       static bool open = true;
       ozz::sample::ImGui::OpenClose oc(_im_gui, "Motion control", &open);
       if (open) {
-        _im_gui->DoCheckBox("Use motion position", &apply_motion_position_);
-        _im_gui->DoCheckBox("Use motion rotation", &apply_motion_rotation_);
+        _im_gui->DoCheckBox("Apply motion position", &apply_motion_position_);
+        _im_gui->DoCheckBox("Apply motion rotation", &apply_motion_rotation_);
         std::snprintf(label, sizeof(label), "Angular vel: %.0f deg/s",
                       angular_velocity_ * 180.f / ozz::math::kPi);
         _im_gui->DoSlider(label, -ozz::math::kPi_2, ozz::math::kPi_2,
                           &angular_velocity_);
         if (_im_gui->DoButton("Teleport")) {
           motion_sampler_.Teleport(ozz::math::Transform::identity());
+          trace_.clear();
         }
       }
     }
