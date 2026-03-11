@@ -57,7 +57,7 @@ if(ozz_build_tools AND ozz_build_fbx)
   set(FBX_MSVC_RT_DLL ${ozz_build_msvc_rt_dll})
 
   # Search for FBX sdk package
-  find_package(Fbx 2016)
+  find_package(Fbx 2020)
 
   # Disables ozz_build_fbx if Fbx SDK isn't found.
   if(NOT FBX_FOUND)
