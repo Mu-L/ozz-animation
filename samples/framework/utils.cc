@@ -82,7 +82,7 @@ int PlaybackController::set_time_ratio(float _ratio) {
     // Split into integral and fractional parts.
     // frac in (-1,1), loopsf is integral part as float
     float loopsf = 0.0f;
-    float frac = std::modff(_ratio, &loopsf);
+    float frac = std::modf(_ratio, &loopsf);
 
     constexpr float eps = 1e-6f;
     if (std::fabs(frac) < eps) {
