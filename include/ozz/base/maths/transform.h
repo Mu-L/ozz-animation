@@ -39,18 +39,16 @@ namespace math {
 // attributes.
 struct OZZ_BASE_DLL Transform {
   // Translation affine transformation component.
-  Float3 translation;
+  Float3 translation = Float3::zero();
 
   // Rotation affine transformation component.
-  Quaternion rotation;
+  Quaternion rotation = Quaternion::identity();
 
   // Scale affine transformation component.
-  Float3 scale;
+  Float3 scale = Float3::one();
 
   // Builds an identity transform.
-  static OZZ_INLINE Transform identity() {
-    return Transform{Float3::zero(), Quaternion::identity(), Float3::one()};
-  }
+  static OZZ_INLINE Transform identity() { return {}; }
 };
 
 // Composes the transforms _lhs and _rhs.

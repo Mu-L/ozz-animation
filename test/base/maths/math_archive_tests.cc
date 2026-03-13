@@ -25,14 +25,11 @@
 //                                                                            //
 //----------------------------------------------------------------------------//
 
-#include "ozz/base/maths/math_archive.h"
-
 #include "gtest/gtest.h"
-
-#include "ozz/base/maths/gtest_math_helper.h"
-
 #include "ozz/base/io/archive.h"
 #include "ozz/base/maths/box.h"
+#include "ozz/base/maths/gtest_math_helper.h"
+#include "ozz/base/maths/math_archive.h"
 #include "ozz/base/maths/quaternion.h"
 #include "ozz/base/maths/rect.h"
 #include "ozz/base/maths/transform.h"
@@ -60,9 +57,9 @@ TEST(MathArchive, ozz_math) {
     const ozz::math::Box o_box(ozz::math::Float3(14.f, 26.f, 46.f),
                                ozz::math::Float3(58.f, 69.f, 99.f));
     o << o_box;
-    const ozz::math::RectFloat o_rect_float(46.f, 69.f, 58.f, 35.f);
+    const ozz::math::RectFloat o_rect_float{46.f, 69.f, 58.f, 35.f};
     o << o_rect_float;
-    const ozz::math::RectInt o_rect_int(46, 69, 58, 35);
+    const ozz::math::RectInt o_rect_int{46, 69, 58, 35};
     o << o_rect_int;
 
     // Reads math types.

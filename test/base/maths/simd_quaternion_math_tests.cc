@@ -25,18 +25,20 @@
 //                                                                            //
 //----------------------------------------------------------------------------//
 
-#include "ozz/base/maths/simd_quaternion.h"
-
 #include <limits>
 
 #include "gtest/gtest.h"
-
 #include "ozz/base/gtest_helper.h"
 #include "ozz/base/maths/gtest_math_helper.h"
 #include "ozz/base/maths/math_constant.h"
 #include "ozz/base/maths/math_ex.h"
+#include "ozz/base/maths/simd_quaternion.h"
 
 using ozz::math::SimdQuaternion;
+
+TEST(QuaternionDefault, ozz_simd_math) {
+  EXPECT_SIMDQUATERNION_EQ(SimdQuaternion{}, 0.f, 0.f, 0.f, 1.f);
+}
 
 TEST(QuaternionConstant, ozz_simd_math) {
   EXPECT_SIMDQUATERNION_EQ(SimdQuaternion::identity(), 0.f, 0.f, 0.f, 1.f);

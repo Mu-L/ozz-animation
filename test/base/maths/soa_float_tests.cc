@@ -25,17 +25,29 @@
 //                                                                            //
 //----------------------------------------------------------------------------//
 
-#include "ozz/base/maths/soa_float.h"
-
 #include "gtest/gtest.h"
-
 #include "ozz/base/gtest_helper.h"
 #include "ozz/base/maths/gtest_math_helper.h"
+#include "ozz/base/maths/soa_float.h"
 
 using ozz::math::SimdFloat4;
 using ozz::math::SoaFloat2;
 using ozz::math::SoaFloat3;
 using ozz::math::SoaFloat4;
+
+TEST(SoaFloatDefault4, ozz_soa_math) {
+  EXPECT_SOAFLOAT4_EQ(SoaFloat4{}, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
+                      0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f);
+}
+
+TEST(SoaFloatDefault3, ozz_soa_math) {
+  EXPECT_SOAFLOAT3_EQ(SoaFloat3{}, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
+                      0.f, 0.f, 0.f);
+}
+
+TEST(SoaFloatDefault2, ozz_soa_math) {
+  EXPECT_SOAFLOAT2_EQ(SoaFloat2{}, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f);
+}
 
 TEST(SoaFloatLoad4, ozz_soa_math) {
   EXPECT_SOAFLOAT4_EQ(
@@ -420,12 +432,13 @@ TEST(SoaFloatComparison4, ozz_soa_math) {
                       10.f, 11.f, 7.f, 13.f, 14.f, 15.f);
 
   EXPECT_SOAFLOAT4_EQ(
-      Clamp(a, SoaFloat4::Load(
-                   ozz::math::simd_float4::Load(1.5f, 5.f, -2.f, 24.f),
-                   ozz::math::simd_float4::Load(2.f, -5.f, 7.f, 1.f),
-                   ozz::math::simd_float4::Load(-3.f, 1.f, 200.f, 0.f),
-                   ozz::math::simd_float4::Load(-9.f, 15.f, 46.f, -1.f)),
-            c),
+      Clamp(
+          a,
+          SoaFloat4::Load(ozz::math::simd_float4::Load(1.5f, 5.f, -2.f, 24.f),
+                          ozz::math::simd_float4::Load(2.f, -5.f, 7.f, 1.f),
+                          ozz::math::simd_float4::Load(-3.f, 1.f, 200.f, 0.f),
+                          ozz::math::simd_float4::Load(-9.f, 15.f, 46.f, -1.f)),
+          c),
       1.5f, 5.f, 2.f, 24.f, 1.f, 5.f, 7.f, 7.f, 2.f, 9.f, 111.f, 11.f, 3.f,
       15.f, 41.f, 15.f);
 
@@ -461,11 +474,12 @@ TEST(SoaFloatComparison3, ozz_soa_math) {
                       10.f, 11.f);
 
   EXPECT_SOAFLOAT3_EQ(
-      Clamp(a, SoaFloat3::Load(
-                   ozz::math::simd_float4::Load(1.5f, 5.f, -2.f, 24.f),
-                   ozz::math::simd_float4::Load(2.f, -5.f, 7.f, 1.f),
-                   ozz::math::simd_float4::Load(-3.f, 1.f, 200.f, 0.f)),
-            c),
+      Clamp(
+          a,
+          SoaFloat3::Load(ozz::math::simd_float4::Load(1.5f, 5.f, -2.f, 24.f),
+                          ozz::math::simd_float4::Load(2.f, -5.f, 7.f, 1.f),
+                          ozz::math::simd_float4::Load(-3.f, 1.f, 200.f, 0.f)),
+          c),
       1.5f, 5.f, 2.f, 24.f, 1.f, 5.f, 7.f, 7.f, 2.f, 9.f, 111.f, 11.f);
 
   EXPECT_SIMDINT_EQ(a < c, 0, 0, 0xffffffff, 0xffffffff);

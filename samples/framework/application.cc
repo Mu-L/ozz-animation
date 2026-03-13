@@ -463,7 +463,7 @@ bool Application::Gui() {
 
   // Finds gui area.
   const float kGuiMargin = 2.f;
-  ozz::math::RectInt window_rect(0, 0, resolution_.width, resolution_.height);
+  ozz::math::RectInt window_rect{0, 0, resolution_.width, resolution_.height};
 
   // Fills ImGui's input structure.
   internal::ImGuiImpl::Inputs input;
@@ -485,9 +485,9 @@ bool Application::Gui() {
 
   // Help gui.
   {
-    math::RectFloat rect(kGuiMargin, kGuiMargin,
+    math::RectFloat rect{kGuiMargin, kGuiMargin,
                          window_rect.width - kGuiMargin * 2.f,
-                         window_rect.height - kGuiMargin * 2.f);
+                         window_rect.height - kGuiMargin * 2.f};
     // Doesn't constrain form is it's opened, so it covers all screen.
     ImGui::Form form(im_gui, "Show help", rect, &show_help_, !show_help_);
     if (show_help_) {
@@ -499,8 +499,8 @@ bool Application::Gui() {
   if (!show_help_ && success &&
       window_rect.width > (kGuiMargin + kFormWidth) * 2.f) {
     static bool open = true;
-    math::RectFloat rect(kGuiMargin, kGuiMargin, kFormWidth,
-                         window_rect.height - kGuiMargin * 2.f - kHelpMargin);
+    math::RectFloat rect{kGuiMargin, kGuiMargin, kFormWidth,
+                         window_rect.height - kGuiMargin * 2.f - kHelpMargin};
     ImGui::Form form(im_gui, "Framework", rect, &open, true);
     if (open) {
       success = FrameworkGui();
@@ -510,9 +510,9 @@ bool Application::Gui() {
   // Do sample gui.
   if (!show_help_ && success && window_rect.width > kGuiMargin + kFormWidth) {
     static bool open = true;
-    math::RectFloat rect(window_rect.width - kFormWidth - kGuiMargin,
+    math::RectFloat rect{window_rect.width - kFormWidth - kGuiMargin,
                          kGuiMargin, kFormWidth,
-                         window_rect.height - kGuiMargin * 2 - kHelpMargin);
+                         window_rect.height - kGuiMargin * 2 - kHelpMargin};
     ImGui::Form form(im_gui, "Sample", rect, &open, true);
     if (open) {
       // Forwards event to the inherited application.

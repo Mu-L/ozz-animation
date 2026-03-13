@@ -251,7 +251,6 @@ TEST(BuildRefPose, AdditiveAnimationBuilder) {
   // Builds animation with a custom refpose & very little tolerance
   {
     ozz::math::Transform ref_pose[3];
-    ref_pose[0] = ozz::math::Transform::identity();
     ref_pose[1].translation = ozz::math::Float3(1.f, 1.f, 1.f);
     ref_pose[1].rotation =
         ozz::math::Quaternion(0.f, 0.f, .70710677f, .70710677f);

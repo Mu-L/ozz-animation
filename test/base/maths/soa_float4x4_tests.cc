@@ -25,17 +25,24 @@
 //                                                                            //
 //----------------------------------------------------------------------------//
 
-#include "ozz/base/maths/soa_float4x4.h"
-
 #include "gtest/gtest.h"
-
 #include "ozz/base/gtest_helper.h"
 #include "ozz/base/maths/gtest_math_helper.h"
+#include "ozz/base/maths/soa_float4x4.h"
 
 using ozz::math::SoaFloat3;
 using ozz::math::SoaFloat4;
 using ozz::math::SoaFloat4x4;
 using ozz::math::SoaQuaternion;
+
+TEST(SoaFloat4x4Default, ozz_soa_math) {
+  EXPECT_SOAFLOAT4x4_EQ(
+      SoaFloat4x4{}, 1.f, 1.f, 1.f, 1.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
+      0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 1.f, 1.f, 1.f, 1.f, 0.f, 0.f, 0.f,
+      0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 1.f, 1.f,
+      1.f, 1.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
+      0.f, 0.f, 0.f, 1.f, 1.f, 1.f, 1.f);
+}
 
 TEST(SoaFloat4x4Constant, ozz_soa_math) {
   const SoaFloat4x4 identity = SoaFloat4x4::identity();

@@ -25,14 +25,21 @@
 //                                                                            //
 //----------------------------------------------------------------------------//
 
-#include "ozz/base/maths/soa_transform.h"
-
 #include "gtest/gtest.h"
-
 #include "ozz/base/gtest_helper.h"
 #include "ozz/base/maths/gtest_math_helper.h"
+#include "ozz/base/maths/soa_transform.h"
 
 using ozz::math::SoaTransform;
+
+TEST(SoaTransformDefault, ozz_soa_math) {
+  EXPECT_SOAFLOAT3_EQ(SoaTransform{}.translation, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
+                      0.f, 0.f, 0.f, 0.f, 0.f, 0.f);
+  EXPECT_SOAQUATERNION_EQ(SoaTransform{}.rotation, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
+                          0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 1.f, 1.f, 1.f, 1.f);
+  EXPECT_SOAFLOAT3_EQ(SoaTransform{}.scale, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f,
+                      1.f, 1.f, 1.f, 1.f, 1.f);
+}
 
 TEST(SoaTransformConstant, ozz_soa_math) {
   EXPECT_SOAFLOAT3_EQ(SoaTransform::identity().translation, 0.f, 0.f, 0.f, 0.f,

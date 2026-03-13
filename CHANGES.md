@@ -8,6 +8,7 @@ Release version next
   - [offline] Implements model-space raw track sampling utility.
   - [base] Makes sure cross product last component is always 0, otherwise risquing to propagate NaNs.
   - [base] Adds math transform multiplication operator.
+  - [base] Implements relevant default initialization of math structures, ensuring safe initialization in user code.
 
 * Tools
   - [gltf2ozz] Updates tinygltf dependency to v2.9

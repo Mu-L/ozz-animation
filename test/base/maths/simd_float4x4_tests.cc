@@ -35,7 +35,12 @@
 using ozz::math::Float4x4;
 using ozz::math::SimdFloat4;
 
-TEST(Float4x4Constant, ) {
+TEST(Float4x4Defaut, ozz_simd_math) {
+  EXPECT_FLOAT4x4_EQ(Float4x4{}, 1.f, 0.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f,
+                     0.f, 1.f, 0.f, 0.f, 0.f, 0.f, 1.f);
+}
+
+TEST(Float4x4Constant, ozz_simd_math) {
   const Float4x4 identity = Float4x4::identity();
   EXPECT_FLOAT4x4_EQ(identity, 1.f, 0.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 0.f,
                      1.f, 0.f, 0.f, 0.f, 0.f, 1.f);
@@ -543,7 +548,7 @@ TEST(Float4x4ToAffine, ozz_simd_math) {
   EXPECT_QUATERNION_EQ(rotation_vec, .70710677f, 0.f, 0.f, .70710677f);
   EXPECT_FLOAT3_EQ(scale_vec, 2.f, -3.f, 4.f);
 
-  ozz::math::Transform transform = ozz::math::Transform::identity();
+  ozz::math::Transform transform;
   EXPECT_TRUE(ToAffine(
       Float4x4::Translation(
           ozz::math::simd_float4::Load(46.f, -69.f, -58.f, 1.f)) *

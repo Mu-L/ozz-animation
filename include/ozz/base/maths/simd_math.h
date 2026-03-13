@@ -1073,7 +1073,8 @@ OZZ_INLINE SimdInt4 CmpGe(_SimdInt4 _a, _SimdInt4 _b);
 // [ m.cols[0].w m.cols[1].w m.cols[2].w m.cols[3].w ]   {v.1}
 struct Float4x4 {
   // Matrix columns.
-  SimdFloat4 cols[4];
+  SimdFloat4 cols[4] = {simd_float4::x_axis(), simd_float4::y_axis(),
+                        simd_float4::z_axis(), simd_float4::w_axis()};
 
   // Returns the identity matrix.
   static OZZ_INLINE Float4x4 identity();

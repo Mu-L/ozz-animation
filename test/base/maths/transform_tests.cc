@@ -32,6 +32,12 @@
 
 using ozz::math::Transform;
 
+TEST(TransformDefault, ozz_math) {
+  EXPECT_FLOAT3_EQ(Transform{}.translation, 0.f, 0.f, 0.f);
+  EXPECT_QUATERNION_EQ(Transform{}.rotation, 0.f, 0.f, 0.f, 1.f);
+  EXPECT_FLOAT3_EQ(Transform{}.scale, 1.f, 1.f, 1.f);
+}
+
 TEST(TransformConstant, ozz_math) {
   EXPECT_FLOAT3_EQ(Transform::identity().translation, 0.f, 0.f, 0.f);
   EXPECT_QUATERNION_EQ(Transform::identity().rotation, 0.f, 0.f, 0.f, 1.f);

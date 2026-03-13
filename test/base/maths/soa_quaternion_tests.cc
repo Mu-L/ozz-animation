@@ -35,6 +35,11 @@ using ozz::math::SoaFloat3;
 using ozz::math::SoaFloat4;
 using ozz::math::SoaQuaternion;
 
+TEST(SoaQuaternionDefault, ozz_soa_math) {
+  EXPECT_SOAQUATERNION_EQ(SoaQuaternion{}, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
+                          0.f, 0.f, 0.f, 0.f, 0.f, 1.f, 1.f, 1.f, 1.f);
+}
+
 TEST(SoaQuaternionConstant, ozz_soa_math) {
   EXPECT_SOAQUATERNION_EQ(SoaQuaternion::identity(), 0.f, 0.f, 0.f, 0.f, 0.f,
                           0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 1.f, 1.f, 1.f,

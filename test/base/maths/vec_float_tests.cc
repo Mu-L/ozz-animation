@@ -25,25 +25,22 @@
 //                                                                            //
 //----------------------------------------------------------------------------//
 
-#include "ozz/base/maths/vec_float.h"
-
 #include "gtest/gtest.h"
-
 #include "ozz/base/gtest_helper.h"
 #include "ozz/base/maths/gtest_math_helper.h"
+#include "ozz/base/maths/vec_float.h"
 
 using ozz::math::Float2;
 using ozz::math::Float3;
 using ozz::math::Float4;
 
-TEST(VectorLoad4, ozz_math) {
-  EXPECT_FLOAT4_EQ(Float4(46.f), 46.f, 46.f, 46.f, 46.f);
-  EXPECT_FLOAT4_EQ(Float4(-1.f, 0.f, 1.f, 2.f), -1.f, 0.f, 1.f, 2.f);
-  const Float3 f3(-1.f, 0.f, 1.f);
-  EXPECT_FLOAT4_EQ(Float4(f3, 2.f), -1.f, 0.f, 1.f, 2.f);
-  const Float2 f2(-1.f, 0.f);
-  EXPECT_FLOAT4_EQ(Float4(f2, 1.f, 2.f), -1.f, 0.f, 1.f, 2.f);
+TEST(VectorDefault4, ozz_math) {
+  EXPECT_FLOAT4_EQ(Float4{}, 0.f, 0.f, 0.f, 0.f);
 }
+
+TEST(VectorDefault3, ozz_math) { EXPECT_FLOAT3_EQ(Float3{}, 0.f, 0.f, 0.f); }
+
+TEST(VectorDefault2, ozz_math) { EXPECT_FLOAT2_EQ(Float2{}, 0.f, 0.f); }
 
 TEST(VectorLoad3, ozz_math) {
   EXPECT_FLOAT3_EQ(Float3(46.f), 46.f, 46.f, 46.f);
@@ -57,13 +54,13 @@ TEST(VectorLoad2, ozz_math) {
   EXPECT_FLOAT2_EQ(Float2(-1.f, 0.f), -1.f, 0.f);
 }
 
-TEST(VectorConstant4, ozz_math) {
-  EXPECT_FLOAT4_EQ(Float4::zero(), 0.f, 0.f, 0.f, 0.f);
-  EXPECT_FLOAT4_EQ(Float4::one(), 1.f, 1.f, 1.f, 1.f);
-  EXPECT_FLOAT4_EQ(Float4::x_axis(), 1.f, 0.f, 0.f, 0.f);
-  EXPECT_FLOAT4_EQ(Float4::y_axis(), 0.f, 1.f, 0.f, 0.f);
-  EXPECT_FLOAT4_EQ(Float4::z_axis(), 0.f, 0.f, 1.f, 0.f);
-  EXPECT_FLOAT4_EQ(Float4::w_axis(), 0.f, 0.f, 0.f, 1.f);
+TEST(VectorLoad4, ozz_math) {
+  EXPECT_FLOAT4_EQ(Float4(46.f), 46.f, 46.f, 46.f, 46.f);
+  EXPECT_FLOAT4_EQ(Float4(-1.f, 0.f, 1.f, 2.f), -1.f, 0.f, 1.f, 2.f);
+  const Float3 f3(-1.f, 0.f, 1.f);
+  EXPECT_FLOAT4_EQ(Float4(f3, 2.f), -1.f, 0.f, 1.f, 2.f);
+  const Float2 f2(-1.f, 0.f);
+  EXPECT_FLOAT4_EQ(Float4(f2, 1.f, 2.f), -1.f, 0.f, 1.f, 2.f);
 }
 
 TEST(VectorConstant3, ozz_math) {

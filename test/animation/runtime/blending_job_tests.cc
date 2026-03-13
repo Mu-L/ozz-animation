@@ -34,13 +34,11 @@
 using ozz::animation::BlendingJob;
 
 TEST(JobValidity, BlendingJob) {
-  const ozz::math::SoaTransform identity = ozz::math::SoaTransform::identity();
   const ozz::math::SimdFloat4 zero = ozz::math::simd_float4::zero();
   BlendingJob::Layer layers[2];
-  const ozz::math::SoaTransform rest_poses[3] = {identity, identity, identity};
-  const ozz::math::SoaTransform input_transforms[3] = {identity, identity,
-                                                       identity};
-  ozz::math::SoaTransform output_transforms[3] = {identity, identity, identity};
+  const ozz::math::SoaTransform rest_poses[3];
+  const ozz::math::SoaTransform input_transforms[3];
+  ozz::math::SoaTransform output_transforms[3];
   ozz::math::SimdFloat4 joint_weights[3] = {zero, zero, zero};
 
   layers[0].transform = input_transforms;
@@ -167,15 +165,13 @@ TEST(JobValidity, BlendingJob) {
 }
 
 TEST(JobValidityAdditive, BlendingJob) {
-  const ozz::math::SoaTransform identity = ozz::math::SoaTransform::identity();
   const ozz::math::SimdFloat4 zero = ozz::math::simd_float4::zero();
   BlendingJob::Layer layers[2];
   BlendingJob::Layer additive_layers[2];
 
-  const ozz::math::SoaTransform rest_poses[3] = {identity, identity, identity};
-  const ozz::math::SoaTransform input_transforms[3] = {identity, identity,
-                                                       identity};
-  ozz::math::SoaTransform output_transforms[3] = {identity, identity, identity};
+  const ozz::math::SoaTransform rest_poses[3];
+  const ozz::math::SoaTransform input_transforms[3];
+  ozz::math::SoaTransform output_transforms[3];
   ozz::math::SimdFloat4 joint_weights[3] = {zero, zero, zero};
 
   layers[0].transform = input_transforms;
@@ -231,10 +227,8 @@ TEST(JobValidityAdditive, BlendingJob) {
 }
 
 TEST(Empty, BlendingJob) {
-  const ozz::math::SoaTransform identity = ozz::math::SoaTransform::identity();
-
   // Initialize rest pose.
-  ozz::math::SoaTransform rest_poses[2] = {identity, identity};
+  ozz::math::SoaTransform rest_poses[2];
   rest_poses[0].translation = ozz::math::SoaFloat3::Load(
       ozz::math::simd_float4::Load(0.f, 1.f, 2.f, 3.f),
       ozz::math::simd_float4::Load(4.f, 5.f, 6.f, 7.f),
@@ -267,11 +261,8 @@ TEST(Empty, BlendingJob) {
 }
 
 TEST(Weight, BlendingJob) {
-  const ozz::math::SoaTransform identity = ozz::math::SoaTransform::identity();
-
   // Initialize inputs.
-  ozz::math::SoaTransform input_transforms[2][2] = {{identity, identity},
-                                                    {identity, identity}};
+  ozz::math::SoaTransform input_transforms[2][2];
   input_transforms[0][0].translation = ozz::math::SoaFloat3::Load(
       ozz::math::simd_float4::Load(0.f, 1.f, 2.f, 3.f),
       ozz::math::simd_float4::Load(4.f, 5.f, 6.f, 7.f),
@@ -284,7 +275,7 @@ TEST(Weight, BlendingJob) {
   input_transforms[1][1].translation = -input_transforms[0][1].translation;
 
   // Initialize rest pose.
-  ozz::math::SoaTransform rest_poses[2] = {identity, identity};
+  ozz::math::SoaTransform rest_poses[2];
   rest_poses[0].scale = ozz::math::SoaFloat3::Load(
       ozz::math::simd_float4::Load(0.f, 1.f, 2.f, 3.f),
       ozz::math::simd_float4::Load(4.f, 5.f, 6.f, 7.f),
@@ -354,11 +345,8 @@ TEST(Weight, BlendingJob) {
 }
 
 TEST(JointWeights, BlendingJob) {
-  const ozz::math::SoaTransform identity = ozz::math::SoaTransform::identity();
-
   // Initialize inputs.
-  ozz::math::SoaTransform input_transforms[2][2] = {{identity, identity},
-                                                    {identity, identity}};
+  ozz::math::SoaTransform input_transforms[2][2];
   input_transforms[0][0].translation = ozz::math::SoaFloat3::Load(
       ozz::math::simd_float4::Load(0.f, 1.f, 2.f, 3.f),
       ozz::math::simd_float4::Load(4.f, 5.f, 6.f, 7.f),
@@ -375,7 +363,7 @@ TEST(JointWeights, BlendingJob) {
       {ozz::math::simd_float4::Load(1.f, 1.f, 1.f, 0.f),
        ozz::math::simd_float4::Load(0.f, 1.f, 1.f, 1.f)}};
   // Initialize rest pose.
-  ozz::math::SoaTransform rest_poses[2] = {identity, identity};
+  ozz::math::SoaTransform rest_poses[2];
   rest_poses[0].translation = ozz::math::SoaFloat3::Load(
       ozz::math::simd_float4::Load(10.f, 11.f, 12.f, 13.f),
       ozz::math::simd_float4::Load(14.f, 15.f, 16.f, 17.f),
@@ -441,13 +429,11 @@ TEST(JointWeights, BlendingJob) {
 }
 
 TEST(Normalize, BlendingJob) {
-  const ozz::math::SoaTransform identity = ozz::math::SoaTransform::identity();
-
   // Initialize inputs.
-  ozz::math::SoaTransform input_transforms[2][1] = {{identity}, {identity}};
+  ozz::math::SoaTransform input_transforms[2][1];
 
   // Initialize rest pose.
-  ozz::math::SoaTransform rest_poses[1] = {identity};
+  ozz::math::SoaTransform rest_poses[1];
   rest_poses[0].scale = ozz::math::SoaFloat3::Load(
       ozz::math::simd_float4::Load(0.f, 1.f, 2.f, 3.f),
       ozz::math::simd_float4::Load(4.f, 5.f, 6.f, 7.f),
@@ -574,13 +560,11 @@ TEST(Normalize, BlendingJob) {
 }
 
 TEST(Threshold, BlendingJob) {
-  const ozz::math::SoaTransform identity = ozz::math::SoaTransform::identity();
-
   // Initialize inputs.
-  ozz::math::SoaTransform input_transforms[2][1] = {{identity}, {identity}};
+  ozz::math::SoaTransform input_transforms[2][1];
 
   // Initialize rest pose.
-  ozz::math::SoaTransform rest_poses[1] = {identity};
+  ozz::math::SoaTransform rest_poses[1];
   rest_poses[0].scale = ozz::math::SoaFloat3::Load(
       ozz::math::simd_float4::Load(0.f, 1.f, 2.f, 3.f),
       ozz::math::simd_float4::Load(4.f, 5.f, 6.f, 7.f),
@@ -801,8 +785,6 @@ TEST(AdditiveWeight, BlendingJob) {
 }
 
 TEST(AdditiveJointWeight, BlendingJob) {
-  const ozz::math::SoaTransform identity = ozz::math::SoaTransform::identity();
-
   // Initialize inputs.
   ozz::math::SoaTransform input_transforms[1] = {
       {input_transforms[0].translation = ozz::math::SoaFloat3::Load(
@@ -824,7 +806,7 @@ TEST(AdditiveJointWeight, BlendingJob) {
       ozz::math::simd_float4::Load(1.f, .5f, 0.f, -1.f)};
 
   // Initialize rest pose.
-  ozz::math::SoaTransform rest_poses[1] = {identity};
+  ozz::math::SoaTransform rest_poses[1];
 
   {
     BlendingJob::Layer layers[1];

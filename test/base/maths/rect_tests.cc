@@ -25,15 +25,23 @@
 //                                                                            //
 //----------------------------------------------------------------------------//
 
+#include "gtest/gtest.h"
+#include "ozz/base/gtest_helper.h"
 #include "ozz/base/maths/rect.h"
 
-#include "gtest/gtest.h"
-
-#include "ozz/base/gtest_helper.h"
-
 TEST(RectInt, ozz_math) {
-  ozz::math::RectInt rect(10, 20, 30, 40);
+  EXPECT_EQ(ozz::math::RectInt{}.left, 0);
+  EXPECT_EQ(ozz::math::RectInt{}.bottom, 0);
+  EXPECT_EQ(ozz::math::RectInt{}.width, 0);
+  EXPECT_EQ(ozz::math::RectInt{}.height, 0);
+  EXPECT_EQ(ozz::math::RectInt{}.right(), 0);
+  EXPECT_EQ(ozz::math::RectInt{}.top(), 0);
 
+  ozz::math::RectInt rect{10, 20, 30, 40};
+  EXPECT_EQ(rect.left, 10);
+  EXPECT_EQ(rect.bottom, 20);
+  EXPECT_EQ(rect.width, 30);
+  EXPECT_EQ(rect.height, 40);
   EXPECT_EQ(rect.right(), 40);
   EXPECT_EQ(rect.top(), 60);
 
@@ -47,7 +55,14 @@ TEST(RectInt, ozz_math) {
 }
 
 TEST(RectFloat, ozz_math) {
-  ozz::math::RectFloat rect(10.f, 20.f, 30.f, 40.f);
+  EXPECT_EQ(ozz::math::RectFloat{}.left, 0.f);
+  EXPECT_EQ(ozz::math::RectFloat{}.bottom, 0.f);
+  EXPECT_EQ(ozz::math::RectFloat{}.width, 0.f);
+  EXPECT_EQ(ozz::math::RectFloat{}.height, 0.f);
+  EXPECT_EQ(ozz::math::RectFloat{}.right(), 0.f);
+  EXPECT_EQ(ozz::math::RectFloat{}.top(), 0.f);
+
+  ozz::math::RectFloat rect{10.f, 20.f, 30.f, 40.f};
 
   EXPECT_FLOAT_EQ(rect.right(), 40.f);
   EXPECT_FLOAT_EQ(rect.top(), 60.f);
