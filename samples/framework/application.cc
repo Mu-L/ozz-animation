@@ -37,10 +37,10 @@
 #include <unistd.h>
 #endif  // __APPLE__
 
-#if EMSCRIPTEN
+#if __EMSCRIPTEN__
 #include <emscripten.h>
 #include <emscripten/html5.h>
-#endif  // EMSCRIPTEN
+#endif  // __EMSCRIPTEN__
 
 #include "framework/image.h"
 #include "framework/internal/camera.h"
@@ -206,9 +206,9 @@ int Application::Run(int _argc, const char** _argv, const char* _version,
         shooter_ = make_unique<internal::Shooter>();
         im_gui_ = make_unique<internal::ImGuiImpl>();
 
-#ifndef EMSCRIPTEN  // Better not rename web page.
+#ifndef __EMSCRIPTEN__  // Better not rename web page.
         glfwSetWindowTitle(_title);
-#endif  // EMSCRIPTEN
+#endif  // __EMSCRIPTEN__
 
         // Setup the window and installs callbacks.
         glfwSwapInterval(vertical_sync_ ? swap_interval_ : 0);
@@ -266,7 +266,7 @@ Application::LoopStatus Application::OneLoop(int _loops) {
   }
 
 // Don't overload the cpu if the window is not active.
-#ifndef EMSCRIPTEN
+#ifndef __EMSCRIPTEN__
   if (OPTIONS_render && !glfwGetWindowParam(GLFW_ACTIVE)) {
     glfwWaitEvents();  // Wait...
 
@@ -285,7 +285,7 @@ Application::LoopStatus Application::OneLoop(int _loops) {
   if (width != resolution_.width || height != resolution_.height) {
     ResizeCbk(width, height);
   }
-#endif  // EMSCRIPTEN
+#endif  // __EMSCRIPTEN__
 
   // Enable/disable help on F1 key.
   show_help_ = show_help_ ^ KeyPressed<GLFW_KEY_F1>();
@@ -321,9 +321,9 @@ bool Application::Loop() {
 
 // Emscripten requires to manage the main loop on their own, as browsers don't
 // like infinite blocking functions.
-#ifdef EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
   emscripten_set_main_loop_arg(OneLoopCbk, this, 0, 1);
-#else   // EMSCRIPTEN
+#else   // __EMSCRIPTEN__
   // Loops.
   for (int loops = 0; success; ++loops) {
     const LoopStatus status = OneLoop(loops);
@@ -332,7 +332,7 @@ bool Application::Loop() {
       break;
     }
   }
-#endif  // EMSCRIPTEN
+#endif  // __EMSCRIPTEN__
 
   // De-initialize sample, even in case of initialization failure.
   OnDestroy();

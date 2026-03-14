@@ -41,11 +41,11 @@
 // Including glfw includes gl.h
 #include "GL/glfw.h"
 
-#ifdef EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
 // include features as core functions.
 #include <GLES2/gl2.h>
 
-#else  // EMSCRIPTEN
+#else  // __EMSCRIPTEN__
 
 // Detects already defined GL_VERSION and deduces required extensions.
 #ifndef GL_VERSION_1_5
@@ -58,7 +58,7 @@
 #define OZZ_GL_VERSION_3_0_EXT
 #endif  // GL_VERSION_3_0
 
-#endif  // EMSCRIPTEN
+#endif  // __EMSCRIPTEN__
 
 // Include features as extentions
 #include "GL/glext.h"
@@ -235,10 +235,10 @@ class RendererImpl : public Renderer {
   // Bone and joint model objects.
   Model models_[2];
 
-#ifndef EMSCRIPTEN
+#ifndef __EMSCRIPTEN__
   // Vertex array
   GLuint vertex_array_o_ = 0;
-#endif  // EMSCRIPTEN
+#endif  // __EMSCRIPTEN__
 
   // Dynamic vbo used for arrays.
   GLuint dynamic_array_bo_ = 0;

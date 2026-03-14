@@ -47,10 +47,10 @@
 #include "ozz/base/maths/vec_float.h"
 #include "ozz/options/options.h"
 
-#if EMSCRIPTEN
+#if __EMSCRIPTEN__
 #include <emscripten.h>
 #include <emscripten/threading.h>
-#endif  // EMSCRIPTEN
+#endif  // __EMSCRIPTEN__
 
 // Skeleton archive can be specified as an option.
 OZZ_OPTIONS_DECLARE_STRING(skeleton,
@@ -77,11 +77,11 @@ const int kMinGrainSize = 32;
 
 // Checks if platform has threading support.
 bool HasThreadingSupport() {
-#ifdef EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
   return emscripten_has_threading_support();
-#else   // EMSCRIPTEN
+#else   // __EMSCRIPTEN__
   return true;
-#endif  // EMSCRIPTEN
+#endif  // __EMSCRIPTEN__
 }
 
 class MultithreadSampleApplication : public ozz::sample::Application {
