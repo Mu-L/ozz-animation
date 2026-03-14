@@ -3,14 +3,19 @@ if(NOT ozz_build_fbx)
 endif()
 
 add_library(ozz_animation_fbx
-  ${PROJECT_SOURCE_DIR}/include/ozz/animation/offline/fbx/export.h
-  ${PROJECT_SOURCE_DIR}/include/ozz/animation/offline/fbx/fbx.h
   fbx.cc
-  ${PROJECT_SOURCE_DIR}/include/ozz/animation/offline/fbx/fbx_animation.h
   fbx_animation.cc
-  ${PROJECT_SOURCE_DIR}/include/ozz/animation/offline/fbx/fbx_skeleton.h
   fbx_skeleton.cc)
-  
+
+target_sources(ozz_animation_fbx PUBLIC
+  FILE_SET HEADERS
+  BASE_DIRS ${PROJECT_SOURCE_DIR}/include
+  FILES
+    ${PROJECT_SOURCE_DIR}/include/ozz/animation/offline/fbx/export.h
+    ${PROJECT_SOURCE_DIR}/include/ozz/animation/offline/fbx/fbx.h
+    ${PROJECT_SOURCE_DIR}/include/ozz/animation/offline/fbx/fbx_animation.h
+    ${PROJECT_SOURCE_DIR}/include/ozz/animation/offline/fbx/fbx_skeleton.h)
+
 target_compile_definitions(ozz_animation_fbx PRIVATE  $<$<BOOL:${BUILD_SHARED_LIBS}>:OZZ_BUILD_ANIMATIONFBX_LIB>)
 
 target_link_libraries(ozz_animation_fbx
@@ -18,7 +23,9 @@ target_link_libraries(ozz_animation_fbx
   fbx::sdk)
 set_target_properties(ozz_animation_fbx PROPERTIES FOLDER "ozz/tools")
 
-install(TARGETS ozz_animation_fbx DESTINATION lib)
+install(TARGETS ozz_animation_fbx
+  DESTINATION lib
+  FILE_SET HEADERS DESTINATION include)
 
 fuse_target("ozz_animation_fbx")
 
@@ -27,6 +34,8 @@ add_executable(fbx2ozz
   fbx2ozz.cc
   fbx2ozz_anim.cc
   fbx2ozz_skel.cc)
+
+target_include_directories(fbx2ozz PRIVATE ${PROJECT_SOURCE_DIR}/src)
 target_link_libraries(fbx2ozz
   ozz_animation_tools
   ozz_animation_fbx)
@@ -49,7 +58,7 @@ set(build_configurations
   "/fbx/pab/crossarms.fbx\;{\"skeleton\":{\"filename\":\"pab/skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"pab/crossarms.ozz\"}]}\;output:pab/crossarms.ozz\;depend:pab/skeleton.ozz"
   "/fbx/pab/crackhead.fbx\;{\"skeleton\":{\"filename\":\"pab/skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"pab/crackhead.ozz\"},{\"filename\":\"pab/crackhead_additive.ozz\",\"additive\":true}]}\;output:pab/crackhead_additive.ozz\;output:pab/crackhead.ozz\;depend:pab/skeleton.ozz"
   "/fbx/pab/hand.fbx\;{\"skeleton\":{\"filename\":\"pab/skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"clip\":\"curl\",\"filename\":\"pab/curl_additive.ozz\",\"additive\":true,\"additive_reference\":\"skeleton\"},{\"clip\":\"splay\",\"filename\":\"pab/splay_additive.ozz\",\"additive\":true,\"additive_reference\":\"skeleton\"}]}\;output:pab/curl_additive.ozz\;output:pab/splay_additive.ozz\;depend:pab/skeleton.ozz"
-  
+
   # Quaternius
   # Note that we don't list all animations here, so it might create issues if dependencies are needed
   "/fbx/quaternius/ual.fbx\;{\"skeleton\":{\"filename\":\"quaternius/skeleton.ozz\",\"import\":{\"enable\":true}},\"animations\":[{\"filename\":\"quaternius/*.ozz\"}]}\;output:quaternius/skeleton.ozz\;output:quaternius/Rig_A_TPose.ozz"
@@ -57,13 +66,13 @@ set(build_configurations
   # Library data with root motion
   "/fbx/pab/atlas.fbx\;{\"skeleton\":{\"filename\":\"pab/skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"pab/atlas_no_motion.ozz\",\"tracks\":{\"motion\":{\"enable\":true,\"rotation\":{\"loop\":true},\"filename\":\"pab/atlas_motion_track.ozz\"}}}]}\;output:pab/atlas_no_motion.ozz\;output:pab/atlas_motion_track.ozz\;depend:pab/skeleton.ozz"
   "/fbx/pab/locomotions.fbx\;{\"skeleton\":{\"filename\":\"pab/skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"pab/*_no_motion.ozz\",\"tracks\":{\"motion\":{\"enable\":true,\"rotation\":{\"loop\":true},\"filename\":\"pab/*_motion_track.ozz\"}}}]}\;output:pab/walk_no_motion.ozz\;output:pab/jog_no_motion.ozz\;output:pab/run_no_motion.ozz\;output:pab/walk_motion_track.ozz\;output:pab/jog_motion_track.ozz\;output:pab/run_motion_track.ozz\;depend:pab/skeleton.ozz"
-  
+
   # Robot user channels
   "/fbx/robot.fbx\;\;config_file:${PROJECT_SOURCE_DIR}/samples/user_channel/config.json\;output:robot_skeleton.ozz\;output:robot_animation.ozz\;output:robot_track_grasp.ozz"
 
   # Baked animation
   "/fbx/baked.fbx\;\;config_file:${PROJECT_SOURCE_DIR}/samples/baked/config.json\;output:baked_skeleton.ozz\;output:baked_animation.ozz"
-  
+
   # Ruby
   "/fbx/sketchfab/ruby.fbx\;{\"skeleton\":{\"filename\":\"ruby_skeleton.ozz\",\"import\":{\"enable\":true}},\"animations\":[{\"filename\":\"ruby_animation.ozz\"}]}\;output:ruby_skeleton.ozz\;output:ruby_animation.ozz"
 
@@ -98,7 +107,7 @@ foreach(line ${build_configurations})
   set(options "")
   set(depends "")
   set(config_file "")
-    
+
   # Loops over all elements to find parameters.
   foreach(element ${line})
     if (${element} MATCHES "output:(.*)")
@@ -126,8 +135,8 @@ foreach(line ${build_configurations})
 
   # Make sure output directory exists
   foreach(output ${outputs})
-    get_filename_component(output_dir "${output}" DIRECTORY)
-    make_directory("${output_dir}")
+    cmake_path(GET output PARENT_PATH output_dir)
+    file(MAKE_DIRECTORY "${output_dir}")
   endforeach()
 
   # Dump config file

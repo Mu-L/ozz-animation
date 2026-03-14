@@ -1,9 +1,8 @@
 set(OpenGL_GL_PREFERENCE LEGACY)
 find_package(OpenGL REQUIRED)
 
-# Buils Win32 specific files and options
+# Collect platform-specific sources
 if(WIN32)
-  include_directories(lib/win32)
   set(specific_file_list
     lib/win32/platform.h
     lib/win32/win32_dllmain.c
@@ -15,18 +14,12 @@ if(WIN32)
     lib/win32/win32_thread.c
     lib/win32/win32_time.c
     lib/win32/win32_window.c)
-  if(MSYS OR MINGW)
-    # Disables warnings in glfw.
-    set_source_files_properties(${specific_file_list} PROPERTIES COMPILE_FLAGS "-Wno-unknown-pragmas")
-  endif()
 endif()
 
 # Samples requires X11 package on linux.
 if(UNIX AND NOT APPLE)
   find_package(X11)
   if(X11_FOUND)
-    include_directories(lib/x11)
-    include_directories(${X11_INCLUDE_DIR})
     set(specific_file_list
       lib/x11/platform.h
       lib/x11/x11_enable.c
@@ -48,7 +41,6 @@ if(UNIX AND APPLE)
   find_library(COCOA_FRAMEWORK Cocoa)
   find_library(IOKIT_FRAMEWORK IOKit)
 
-  include_directories(lib/cocoa)
   set(specific_objc_file_list
     lib/cocoa/cocoa_enable.m
     lib/cocoa/cocoa_fullscreen.m
@@ -57,10 +49,6 @@ if(UNIX AND APPLE)
     lib/cocoa/cocoa_joystick.m
     lib/cocoa/cocoa_time.m
     lib/cocoa/cocoa_window.m)
-
-  # Disables warnings in glfw.
-  set_source_files_properties(${specific_objc_file_list} PROPERTIES COMPILE_FLAGS
-    "-Wno-deprecated-declarations -Wno-incompatible-pointer-types -Wno-implicit-function-declaration -Wno-int-conversion")
 
   # Appends other c files
   set(specific_file_list
@@ -87,16 +75,42 @@ add_library(glfw STATIC
   lib/window.c
   ${specific_file_list})
 
-target_include_directories(glfw PUBLIC
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/extern/glfw/include>)
-target_include_directories(glfw PUBLIC
+# Platform-specific private include directories
+if(WIN32)
+  target_include_directories(glfw SYSTEM PRIVATE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib/win32>)
+  if(MSYS OR MINGW)
+    # Disables warnings in glfw.
+    set_source_files_properties(${specific_file_list} PROPERTIES COMPILE_OPTIONS "-Wno-unknown-pragmas")
+  endif()
+endif()
+
+if(UNIX AND NOT APPLE)
+  if(X11_FOUND)
+    target_include_directories(glfw SYSTEM PRIVATE
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib/x11>
+      $<BUILD_INTERFACE:${X11_INCLUDE_DIR}>)
+  endif()
+endif()
+
+if(UNIX AND APPLE)
+  target_include_directories(glfw SYSTEM PRIVATE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib/cocoa>)
+  # Disables warnings in glfw.
+  set_source_files_properties(${specific_objc_file_list} PROPERTIES COMPILE_OPTIONS
+    "-Wno-deprecated-declarations;-Wno-incompatible-pointer-types;-Wno-implicit-function-declaration;-Wno-int-conversion")
+endif()
+
+target_include_directories(glfw SYSTEM PUBLIC
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/extern/glfw/include>
   $<BUILD_INTERFACE:${OPENGL_INCLUDE_DIR}>)
-target_include_directories(glfw PRIVATE
+target_include_directories(glfw SYSTEM PRIVATE
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/extern/glfw/lib>)
+
 # Disables GL deprecation warnings on macos
 target_compile_definitions(glfw PUBLIC $<$<BOOL:APPLE>:GL_SILENCE_DEPRECATION>)
 
-target_link_libraries(glfw
+target_link_libraries(glfw PRIVATE
   ${OPENGL_LIBRARIES}
   ${X11_LIBRARIES}
   ${COCOA_FRAMEWORK}

@@ -10,5 +10,5 @@ find_package(Threads)
 target_link_libraries(gtest
   ${CMAKE_THREAD_LIBS_INIT})
 
-target_include_directories(gtest PUBLIC
+target_include_directories(gtest SYSTEM PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/extern/gtest/fused-src>)

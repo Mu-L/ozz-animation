@@ -25,7 +25,7 @@ set(CPACK_NSIS_MENU_LINKS
   "bin/tools;Tools")
 
 # Defines local variables used for packaging
-STRING(SUBSTRING ${CMAKE_SYSTEM_NAME} 0 3 _PACKAGE_OS)
+string(SUBSTRING ${CMAKE_SYSTEM_NAME} 0 3 _PACKAGE_OS)
 if("${CMAKE_SIZEOF_VOID_P}" EQUAL "4")
   set(_PACKAGE_BITS "32")
 else()

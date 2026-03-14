@@ -3,6 +3,7 @@ if(NOT ozz_build_tools)
 endif()
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/extern/jsoncpp json)
+target_link_libraries(json PRIVATE ozz_suppress_warnings)
 
 add_library(ozz_animation_tools
   ${PROJECT_SOURCE_DIR}/include/ozz/animation/offline/tools/export.h
@@ -18,6 +19,8 @@ add_library(ozz_animation_tools
   import2ozz_track.cc)
 
 target_compile_definitions(ozz_animation_tools PRIVATE $<$<BOOL:${BUILD_SHARED_LIBS}>:OZZ_BUILD_ANIMATIONTOOLS_LIB>)
+
+target_include_directories(ozz_animation_tools PRIVATE ${PROJECT_SOURCE_DIR}/src)
 
 target_link_libraries(ozz_animation_tools
   ozz_animation_offline

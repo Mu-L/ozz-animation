@@ -6,6 +6,7 @@ if(ozz_build_fbx)
     fbx2mesh.cc
     ${PROJECT_SOURCE_DIR}/samples/framework/mesh.cc
     ${PROJECT_SOURCE_DIR}/samples/framework/mesh.h)
+  target_include_directories(sample_fbx2mesh PRIVATE ${PROJECT_SOURCE_DIR}/samples/)
   target_link_libraries(sample_fbx2mesh
     ozz_animation_fbx
     ozz_options)

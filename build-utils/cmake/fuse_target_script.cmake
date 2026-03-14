@@ -14,12 +14,12 @@ string(REPLACE "\\ " " " ozz_fuse_output_file "${ozz_fuse_output_file}")
 # Concat all sources to the output.
 foreach(src_file ${ozz_target_source_files})
 
-  get_filename_component(absolute_src_file ${src_file} ABSOLUTE BASE_DIR ${ozz_fuse_target_dir})
-  get_filename_component(src_file_ext ${absolute_src_file} EXT)
+  cmake_path(ABSOLUTE_PATH src_file BASE_DIRECTORY "${ozz_fuse_target_dir}" OUTPUT_VARIABLE absolute_src_file)
+  cmake_path(GET absolute_src_file EXTENSION src_file_ext)
 
   # Handle source files.
   if(src_file_ext STREQUAL ".cc")
-  
+
     file(READ "${absolute_src_file}" src_file_content)
 
     string(CONCAT output_content "${output_content}" "// Including ${src_file} file.\n\n")
@@ -29,13 +29,13 @@ foreach(src_file ${ozz_target_source_files})
 endforeach()
 
 # Handle private include files (they are not prefixed by "ozz/").
-string(REGEX MATCHALL "#include \"[\^\"ozz\"]([^\"]+)\"" internal_include_lines ${output_content})
+string(REGEX MATCHALL "#include \"[^\"ozz\"]([^\"]+)\"" internal_include_lines ${output_content})
 
 foreach(internal_include_line ${internal_include_lines})
 
   STRING(REGEX REPLACE "#include \"([^\"]+)\"" "\\1" internal_include_file "${internal_include_line}" )
 
-  get_filename_component(internal_src_file src/${internal_include_file} ABSOLUTE BASE_DIR ${ozz_fuse_src_dir})
+  cmake_path(APPEND ozz_fuse_src_dir "src" "${internal_include_file}" OUTPUT_VARIABLE internal_src_file)
   file(READ "${internal_src_file}" internal_src_file_content)
 
   string(REPLACE "${internal_include_line}" "\n// Includes internal include file ${internal_include_file}\n\n${internal_src_file_content}" output_content "${output_content}")
