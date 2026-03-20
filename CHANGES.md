@@ -1,10 +1,9 @@
-
-Release version next
+Release version 0.17.0
 ----------------------
 
 * Library
   - [animation] Prevents introducing NaNs in two-bone IK computation, which was causing instability when softening target position.
-  - [animation] Implements skeleton model-space rest pose utility..
+  - [animation] Implements skeleton model-space rest pose utility.
   - [offline] Implements model-space raw track sampling utility.
   - [base] Makes sure cross product last component is always 0, otherwise risquing to propagate NaNs.
   - [base] Adds math transform multiplication operator.
