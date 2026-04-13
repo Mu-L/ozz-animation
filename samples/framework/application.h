@@ -33,6 +33,10 @@
 #include "ozz/base/containers/string.h"
 #include "ozz/base/memory/unique_ptr.h"
 
+// Forward declaration of GLFW window type (avoids including GLFW in public
+// API).
+struct GLFWwindow;
+
 namespace ozz {
 namespace math {
 struct Box;
@@ -168,12 +172,16 @@ class Application {
   // Implements framework gui rendering.
   bool FrameworkGui();
 
-  // Implements framework glfw window reshape callback.
-  static void ResizeCbk(int _width, int _height);
+  // Implements framework internal window resize callback.
+  void Resize();
+
+  // Implements framework glfw reshape callback.
+  static void ResizeCbk(GLFWwindow* _window, int _width, int _height);
 
   // Implements framework glfw window close callback.
-  static int CloseCbk();
+  static void CloseCbk(GLFWwindow* _window);
 
+ private:
   // Get README.md for content to display it in the help ui.
   void ParseReadme();
 
@@ -181,8 +189,8 @@ class Application {
   Application(const Application& _application);
   void operator=(const Application& _application);
 
-  // A pointer to the current, and only, running application.
-  static Application* application_;
+  // GLFW window handle.
+  GLFWwindow* window_ = nullptr;
 
   // Application exit request.
   bool exit_;
@@ -239,7 +247,8 @@ class Application {
   unique_ptr<Record> render_time_;
 
   // Current screen resolution.
-  Resolution resolution_;
+  Resolution window_size_;
+  Resolution framebuffer_size_;
 
   // Help message.
   ozz::string help_;
