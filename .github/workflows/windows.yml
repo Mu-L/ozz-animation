@@ -3,7 +3,7 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: windows-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -21,7 +21,7 @@ jobs:
             platform: x64
             option: default
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     
     - name: Install fbx sdk
       if: matrix.option != 'no_fbx'
