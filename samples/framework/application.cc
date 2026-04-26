@@ -62,7 +62,7 @@ OZZ_OPTIONS_DECLARE_INT(
     " A negative value disables this feature.",
     -1, false);
 
-OZZ_OPTIONS_DECLARE_BOOL(render, "Enables sample redering.", false, false);
+OZZ_OPTIONS_DECLARE_BOOL(render, "Enables sample redering.", true, false);
 
 namespace {
 // Screen resolution presets.
