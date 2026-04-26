@@ -273,6 +273,7 @@ Application::LoopStatus Application::OneLoop(int _loops) {
     return kBreak;
   }
 
+#ifndef __EMSCRIPTEN__
   // Don't overload the cpu if the window is not active.
   if (OPTIONS_render && !glfwGetWindowAttrib(window_, GLFW_FOCUSED)) {
     glfwWaitEvents();  // Wait...
@@ -283,6 +284,7 @@ Application::LoopStatus Application::OneLoop(int _loops) {
 
     return kContinue;  // ...but don't do anything.
   }
+#endif  // __EMSCRIPTEN__
 
   // Enable/disable help on F1 key.
   show_help_ = show_help_ ^ KeyPressed<GLFW_KEY_F1>(window_);
@@ -720,6 +722,10 @@ void Application::Resize() {
   glfwGetWindowSize(window_, &window_size_.width, &window_size_.height);
   glfwGetFramebufferSize(window_, &framebuffer_size_.width,
                          &framebuffer_size_.height);
+
+  ozz::log::Log() << "Resize :" << window_size_.width << "x"
+                  << window_size_.height << ", " << framebuffer_size_.width
+                  << "x" << framebuffer_size_.height << std::endl;
 
   // Uses the full viewport.
   GL(Viewport(0, 0, GLsizei(framebuffer_size_.width),
