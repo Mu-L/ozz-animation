@@ -271,6 +271,15 @@ Application::LoopStatus Application::OneLoop(int _loops) {
 
     return kContinue;  // ...but don't do anything.
   }
+#else
+  int width, height;
+  if (emscripten_get_canvas_element_size("#canvas", &width, &height) !=
+      EMSCRIPTEN_RESULT_SUCCESS) {
+    return kBreakFailure;
+  }
+  if (width != window_size_.width || height != window_size_.height) {
+    Resize();
+  }
 #endif  // __EMSCRIPTEN__
 
   // Enable/disable help on F1 key.
