@@ -89,25 +89,12 @@ namespace ozz {
 namespace sample {
 
 Application::Application()
-    : exit_(false),
-      freeze_(false),
-      fix_update_rate(false),
-      fixed_update_rate(60.f),
-      time_factor_(1.f),
-      time_(0.f),
-      last_idle_time_(0.),
-      show_help_(false),
-      vertical_sync_(true),
-      swap_interval_(1),
-      show_grid_(true),
-      show_axes_(true),
-      capture_video_(false),
-      capture_screenshot_(false),
-      fps_(New<Record>(128)),
+    : fps_(New<Record>(128)),
       update_time_(New<Record>(128)),
       render_time_(New<Record>(128)),
       window_size_(resolution_presets[0]),
-      framebuffer_size_(resolution_presets[0]) {
+      framebuffer_size_(resolution_presets[0]),
+      content_scale_(framebuffer_size_.width / window_size_.width) {
 #ifndef NDEBUG
   // Assert presets are correctly sorted.
   for (int i = 1; i < kNumPresets; ++i) {
@@ -169,7 +156,7 @@ int Application::Run(int _argc, const char** _argv, const char* _version,
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
     glfwWindowHint(GLFW_SAMPLES, 4);
-//    glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
+    glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
 #ifndef NDEBUG
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 #endif  // NDEBUG
@@ -465,8 +452,7 @@ bool Application::Gui() {
 
   // Finds gui area.
   const float kGuiMargin = 2.f;
-  ozz::math::RectInt window_rect{0, 0, window_size_.width / 2,
-                                 window_size_.height / 2};
+  ozz::math::RectInt window_rect{0, 0, window_size_.width, window_size_.height};
 
   // Fills ImGui's input structure.
   internal::ImGuiImpl::Inputs input;
@@ -722,17 +708,20 @@ void Application::Resize() {
   glfwGetWindowSize(window_, &window_size_.width, &window_size_.height);
   glfwGetFramebufferSize(window_, &framebuffer_size_.width,
                          &framebuffer_size_.height);
+  content_scale_ = framebuffer_size_.width / window_size_.width;
 
   ozz::log::Log() << "Resize :" << window_size_.width << "x"
                   << window_size_.height << ", " << framebuffer_size_.width
-                  << "x" << framebuffer_size_.height << std::endl;
+                  << "x" << framebuffer_size_.height << ", " << content_scale_
+                  << std::endl;
 
   // Uses the full viewport.
   GL(Viewport(0, 0, GLsizei(framebuffer_size_.width),
               GLsizei(framebuffer_size_.height)));
 
   // Forwards screen size to camera and shooter.
-  app->camera_->Resize(framebuffer_size_.width, framebuffer_size_.height);
+  app->camera_->Resize(framebuffer_size_.width, framebuffer_size_.height,
+                       content_scale_);
   app->shooter_->Resize(framebuffer_size_.width, framebuffer_size_.height);
 }
 

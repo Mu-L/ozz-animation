@@ -229,7 +229,7 @@ void Camera::Bind2D() {
   view_proj_ = projection_2d_;
 }
 
-void Camera::Resize(int _width, int _height) {
+void Camera::Resize(int _width, int _height, float _scale) {
   // Handle empty windows.
   if (_width <= 0 || _height <= 0) {
     projection_ = ozz::math::Float4x4::identity();
@@ -250,11 +250,10 @@ void Camera::Resize(int _width, int _height) {
       0.f, 0.f, -(2.f * kFar * kNear) / (kFar - kNear), 0.f);
 
   // Computes the 2D projection matrix.
-  float scale = 1.f;
   projection_2d_.cols[0] =
-      math::simd_float4::Load(scale * 2.f / _width, 0.f, 0.f, 0.f);
+      math::simd_float4::Load(_scale * 2.f / _width, 0.f, 0.f, 0.f);
   projection_2d_.cols[1] =
-      math::simd_float4::Load(0.f, scale * 2.f / _height, 0.f, 0.f);
+      math::simd_float4::Load(0.f, _scale * 2.f / _height, 0.f, 0.f);
   projection_2d_.cols[2] = math::simd_float4::Load(0.f, 0.f, -2.0f, 0.f);
   projection_2d_.cols[3] = math::simd_float4::Load(-1.f, -1.f, 0.f, 1.f);
 }
