@@ -38,14 +38,16 @@
 // Prevent system gl.h from auto-including glext.h (Linux/macOS Mesa).
 #define GL_GLEXT_LEGACY
 
-// Including GLFW3 also pulls in the platform-appropriate OpenGL headers.
-#include "GLFW/glfw3.h"
-
 #ifdef __EMSCRIPTEN__
+#include <GLFW/emscripten_glfw3.h>
+
 // include features as core functions.
 #include <GLES2/gl2.h>
 
 #else  // __EMSCRIPTEN__
+
+// Including GLFW3 also pulls in the platform-appropriate OpenGL headers.
+#include "GLFW/glfw3.h"
 
 // Detects already defined GL_VERSION and deduces required extensions.
 #ifndef GL_VERSION_1_5

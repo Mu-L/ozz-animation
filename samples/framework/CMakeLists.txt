@@ -43,7 +43,9 @@ if(NOT EMSCRIPTEN)
   # Keep extern/glfw include path to access bundled glext.h extension headers.
   target_include_directories(sample_framework PRIVATE ${PROJECT_SOURCE_DIR}/extern/glfw/include)
 else()
-  target_link_options(sample_framework PUBLIC -sUSE_GLFW=3 -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2)
+  target_compile_options(sample_framework PUBLIC "--use-port=contrib.glfw3")
+  target_link_options(sample_framework PUBLIC "--use-port=contrib.glfw3")
+  target_link_options(sample_framework PUBLIC -sFULL_ES3=1 -sASSERTIONS=1)
 endif()
 
 target_link_libraries(sample_framework

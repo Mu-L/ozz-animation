@@ -144,6 +144,12 @@ int Application::Run(int _argc, const char** _argv, const char* _version,
   // Open an OpenGL window
   bool success = true;
   if (OPTIONS_render) {
+    auto error_callback = [](int error, const char* description) {
+      ozz::log::Err() << "GLFW error " << error << ": " << description
+                      << std::endl;
+    };
+    glfwSetErrorCallback(error_callback);
+
     // Initialize GLFW
     if (!glfwInit()) {
       return EXIT_FAILURE;
@@ -156,10 +162,14 @@ int Application::Run(int _argc, const char** _argv, const char* _version,
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
     glfwWindowHint(GLFW_SAMPLES, 4);
-    glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
+
 #ifndef NDEBUG
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 #endif  // NDEBUG
+
+#ifdef __EMSCRIPTEN__
+    emscripten::glfw3::SetNextWindowCanvasSelector("sample_canvas");
+#endif  // __EMSCRIPTEN__
 
     // Initializes rendering before looping.
     window_ = glfwCreateWindow(window_size_.width, window_size_.height, _title,
@@ -172,8 +182,8 @@ int Application::Run(int _argc, const char** _argv, const char* _version,
     } else {
       // So appllication can access window from static callbacks.
       glfwSetWindowUserPointer(window_, this);
-
       glfwMakeContextCurrent(window_);
+
       log::Out() << "Successfully opened OpenGL window version \""
                  << glGetString(GL_VERSION) << "\"." << std::endl;
 
@@ -199,6 +209,11 @@ int Application::Run(int _argc, const char** _argv, const char* _version,
         glfwSetWindowSizeCallback(window_, ResizeCbk);
         glfwSetFramebufferSizeCallback(window_, ResizeCbk);
         glfwSetWindowCloseCallback(window_, CloseCbk);
+
+#ifdef __EMSCRIPTEN__
+        // Makes the canvas resizable to the size of its div container
+        emscripten::glfw3::MakeCanvasResizable(window_, "sample_container");
+#endif  // __EMSCRIPTEN__
 
         // GLFW3 does not fire an initial resize event on window creation.
         // Trigger it manually to initialize viewport and camera projection
@@ -270,15 +285,6 @@ Application::LoopStatus Application::OneLoop(int _loops) {
     last_idle_time_ = glfwGetTime();
 
     return kContinue;  // ...but don't do anything.
-  }
-#else
-  int width, height;
-  if (emscripten_get_canvas_element_size("#canvas", &width, &height) !=
-      EMSCRIPTEN_RESULT_SUCCESS) {
-    return kBreakFailure;
-  }
-  if (width != window_size_.width || height != window_size_.height) {
-    Resize();
   }
 #endif  // __EMSCRIPTEN__
 
@@ -715,14 +721,18 @@ void Application::Resize() {
       reinterpret_cast<Application*>(glfwGetWindowUserPointer(window_));
 
   glfwGetWindowSize(window_, &window_size_.width, &window_size_.height);
+
   glfwGetFramebufferSize(window_, &framebuffer_size_.width,
                          &framebuffer_size_.height);
-  content_scale_ = framebuffer_size_.width / window_size_.width;
 
-  ozz::log::Log() << "Resize :" << window_size_.width << "x"
+  glfwGetWindowContentScale(window_, &content_scale_.x, &content_scale_.y);
+
+  /*
+  ozz::log::Out() << "Resize :" << window_size_.width << "x"
                   << window_size_.height << ", " << framebuffer_size_.width
-                  << "x" << framebuffer_size_.height << ", " << content_scale_
-                  << std::endl;
+                  << "x" << framebuffer_size_.height << ", " << content_scale_.x
+                  << "x" << content_scale_.y << std::endl;
+  */
 
   // Uses the full viewport.
   GL(Viewport(0, 0, GLsizei(framebuffer_size_.width),

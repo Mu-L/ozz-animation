@@ -80,7 +80,7 @@ class Camera {
   void Bind2D();
 
   // Resize notification, used to rebuild projection matrix.
-  void Resize(int _width, int _height, float _scale);
+  void Resize(int _width, int _height, const math::Float2& _scale);
 
   // Get the current projection matrix.
   const math::Float4x4& projection() { return projection_; }

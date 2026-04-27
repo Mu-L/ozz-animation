@@ -229,7 +229,7 @@ void Camera::Bind2D() {
   view_proj_ = projection_2d_;
 }
 
-void Camera::Resize(int _width, int _height, float _scale) {
+void Camera::Resize(int _width, int _height, const math::Float2& _scale) {
   // Handle empty windows.
   if (_width <= 0 || _height <= 0) {
     projection_ = ozz::math::Float4x4::identity();
@@ -239,11 +239,11 @@ void Camera::Resize(int _width, int _height, float _scale) {
 
   // Compute the 3D projection matrix.
   const float ratio = 1.f * _width / _height;
-  const float h = tan(kFovY * .5f) * kNear;
+  const float h = tan(kFovY * .5f);
   const float w = h * ratio;
 
-  projection_.cols[0] = math::simd_float4::Load(kNear / w, 0.f, 0.f, 0.f);
-  projection_.cols[1] = math::simd_float4::Load(0.f, kNear / h, 0.f, 0.f);
+  projection_.cols[0] = math::simd_float4::Load(1.f / w, 0.f, 0.f, 0.f);
+  projection_.cols[1] = math::simd_float4::Load(0.f, 1.f / h, 0.f, 0.f);
   projection_.cols[2] =
       math::simd_float4::Load(0.f, 0.f, -(kFar + kNear) / (kFar - kNear), -1.f);
   projection_.cols[3] = math::simd_float4::Load(
@@ -251,9 +251,9 @@ void Camera::Resize(int _width, int _height, float _scale) {
 
   // Computes the 2D projection matrix.
   projection_2d_.cols[0] =
-      math::simd_float4::Load(_scale * 2.f / _width, 0.f, 0.f, 0.f);
+      math::simd_float4::Load(_scale.x * 2.f / _width, 0.f, 0.f, 0.f);
   projection_2d_.cols[1] =
-      math::simd_float4::Load(0.f, _scale * 2.f / _height, 0.f, 0.f);
+      math::simd_float4::Load(0.f, _scale.y * 2.f / _height, 0.f, 0.f);
   projection_2d_.cols[2] = math::simd_float4::Load(0.f, 0.f, -2.0f, 0.f);
   projection_2d_.cols[3] = math::simd_float4::Load(-1.f, -1.f, 0.f, 1.f);
 }

@@ -31,6 +31,7 @@
 #include <cstddef>
 
 #include "ozz/base/containers/string.h"
+#include "ozz/base/maths/vec_float.h"
 #include "ozz/base/memory/unique_ptr.h"
 
 // Forward declaration of GLFW window type (avoids including GLFW in public
@@ -39,10 +40,8 @@ struct GLFWwindow;
 
 namespace ozz {
 namespace math {
-struct Box;
-struct Float2;
-struct Float3;
 struct Float4x4;
+struct Box;
 }  // namespace math
 namespace sample {
 
@@ -249,7 +248,7 @@ class Application {
   // Current screen resolution.
   Resolution window_size_;
   Resolution framebuffer_size_;
-  float content_scale_;
+  ozz::math::Float2 content_scale_;
 
   // Help message.
   ozz::string help_;
