@@ -485,45 +485,49 @@ bool Application::Gui() {
   // Downcast to public imgui.
   ImGui* im_gui = im_gui_.get();
 
-  // Do floating gui.
-  if (!show_help_) {
-    success = OnFloatingGui(im_gui);
-  }
-
-  // Help gui.
-  {
-    math::RectFloat rect{kGuiMargin, kGuiMargin,
-                         window_rect.width - kGuiMargin * 2.f,
-                         window_rect.height - kGuiMargin * 2.f};
-    // Doesn't constrain form is it's opened, so it covers all screen.
-    ImGui::Form form(im_gui, "Show help", rect, &show_help_, !show_help_);
-    if (show_help_) {
-      im_gui->DoLabel(help_.c_str(), ImGui::kLeft, false);
+  if (window_rect.width > (kGuiMargin + kFormWidth) * 2.f) {
+    // Do floating gui.
+    if (!show_help_) {
+      success = OnFloatingGui(im_gui);
     }
-  }
 
-  // Do framework gui.
-  if (!show_help_ && success &&
-      window_rect.width > (kGuiMargin + kFormWidth) * 2.f) {
-    static bool open = true;
-    math::RectFloat rect{kGuiMargin, kGuiMargin, kFormWidth,
-                         window_rect.height - kGuiMargin * 2.f - kHelpMargin};
-    ImGui::Form form(im_gui, "Framework", rect, &open, true);
-    if (open) {
-      success = FrameworkGui();
+    // Help gui.
+    {
+      math::RectFloat rect{kGuiMargin, kGuiMargin,
+                           window_rect.width - kGuiMargin * 2.f,
+                           window_rect.height - kGuiMargin * 2.f};
+      // Doesn't constrain form is it's opened, so it covers all screen.
+      ImGui::Form form(im_gui, "Show help", rect, &show_help_, !show_help_);
+      if (show_help_) {
+        im_gui->DoLabel(help_.c_str(), ImGui::kLeft, false);
+      }
     }
-  }
 
-  // Do sample gui.
-  if (!show_help_ && success && window_rect.width > kGuiMargin + kFormWidth) {
-    static bool open = true;
-    math::RectFloat rect{window_rect.width - kFormWidth - kGuiMargin,
-                         kGuiMargin, kFormWidth,
-                         window_rect.height - kGuiMargin * 2 - kHelpMargin};
-    ImGui::Form form(im_gui, "Sample", rect, &open, true);
-    if (open) {
-      // Forwards event to the inherited application.
-      success = OnGui(im_gui);
+    if (!show_help_) {
+      // Do framework gui.
+      if (success) {
+        static bool open = true;
+        math::RectFloat rect{
+            kGuiMargin, kGuiMargin, kFormWidth,
+            window_rect.height - kGuiMargin * 2.f - kHelpMargin};
+        ImGui::Form form(im_gui, "Framework", rect, &open, true);
+        if (open) {
+          success = FrameworkGui();
+        }
+      }
+
+      // Do sample gui.
+      if (success) {
+        static bool open = true;
+        math::RectFloat rect{window_rect.width - kFormWidth - kGuiMargin,
+                             kGuiMargin, kFormWidth,
+                             window_rect.height - kGuiMargin * 2 - kHelpMargin};
+        ImGui::Form form(im_gui, "Sample", rect, &open, true);
+        if (open) {
+          // Forwards event to the inherited application.
+          success = OnGui(im_gui);
+        }
+      }
     }
   }
 
@@ -730,7 +734,8 @@ void Application::Resize() {
   /*
   ozz::log::Out() << "Resize :" << window_size_.width << "x"
                   << window_size_.height << ", " << framebuffer_size_.width
-                  << "x" << framebuffer_size_.height << ", " << content_scale_.x
+                  << "x" << framebuffer_size_.height << ", " <<
+  content_scale_.x
                   << "x" << content_scale_.y << std::endl;
   */
 
@@ -749,7 +754,8 @@ void Application::Resize() {
       reinterpret_cast<Application*>(glfwGetWindowUserPointer(_window));
 
   app->exit_ = true;
-  // Prevent GLFW from closing the window — we handle it at the end of the loop.
+  // Prevent GLFW from closing the window — we handle it at the end of the
+  // loop.
   glfwSetWindowShouldClose(_window, GLFW_FALSE);
 }
 
