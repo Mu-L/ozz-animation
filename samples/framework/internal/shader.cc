@@ -42,9 +42,9 @@ namespace internal {
 #ifdef __EMSCRIPTEN__
 // WebGL requires to specify floating point precision
 static const char* kPlatformSpecificVSHeader =
-    "#version 300 es\n precision mediump float;\n";
+    "#version 300 es\n precision highp float;\n";
 static const char* kPlatformSpecificFSHeader =
-    "#version 300 es\n precision mediump float;\n";
+    "#version 300 es\n precision highp float;\n";
 #else   // __EMSCRIPTEN__
 static const char* kPlatformSpecificVSHeader = "#version 330\n";
 static const char* kPlatformSpecificFSHeader = "#version 330\n";
