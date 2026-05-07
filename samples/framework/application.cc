@@ -94,7 +94,7 @@ Application::Application()
       render_time_(New<Record>(128)),
       window_size_(resolution_presets[0]),
       framebuffer_size_(resolution_presets[0]),
-      content_scale_(framebuffer_size_.width / window_size_.width) {
+      content_scale_(1.f) {
 #ifndef NDEBUG
   // Assert presets are correctly sorted.
   for (int i = 1; i < kNumPresets; ++i) {
