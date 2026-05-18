@@ -31,14 +31,17 @@
 #include <cstddef>
 
 #include "ozz/base/containers/string.h"
+#include "ozz/base/maths/vec_float.h"
 #include "ozz/base/memory/unique_ptr.h"
+
+// Forward declaration of GLFW window type (avoids including GLFW in public
+// API).
+struct GLFWwindow;
 
 namespace ozz {
 namespace math {
-struct Box;
-struct Float2;
-struct Float3;
 struct Float4x4;
+struct Box;
 }  // namespace math
 namespace sample {
 
@@ -168,12 +171,16 @@ class Application {
   // Implements framework gui rendering.
   bool FrameworkGui();
 
-  // Implements framework glfw window reshape callback.
-  static void ResizeCbk(int _width, int _height);
+  // Implements framework internal window resize callback.
+  void Resize();
+
+  // Implements framework glfw reshape callback.
+  static void ResizeCbk(GLFWwindow* _window, int _width, int _height);
 
   // Implements framework glfw window close callback.
-  static int CloseCbk();
+  static void CloseCbk(GLFWwindow* _window);
 
+ private:
   // Get README.md for content to display it in the help ui.
   void ParseReadme();
 
@@ -181,31 +188,31 @@ class Application {
   Application(const Application& _application);
   void operator=(const Application& _application);
 
-  // A pointer to the current, and only, running application.
-  static Application* application_;
+  // GLFW window handle.
+  GLFWwindow* window_ = nullptr;
 
   // Application exit request.
-  bool exit_;
+  bool exit_ = false;
 
   // Update time freeze state.
-  bool freeze_;
+  bool freeze_ = false;
 
   // Fixes update rat to a fixed value, instead of real_time.
-  bool fix_update_rate;
+  bool fix_update_rate = false;
 
   // Fixed update rate, only applies to application update dt, not the real fps.
-  float fixed_update_rate;
+  float fixed_update_rate = 60.f;
 
   // Update time scale factor.
-  float time_factor_;
+  float time_factor_ = 1.f;
 
   // Current application time, including scaling and freezes..
-  float time_;
+  float time_ = 0.f;
 
   // Last time the idle function was called, in seconds.
   // This is a double value in order to maintain enough accuracy when the
   // application is running since a long time.
-  double last_idle_time_;
+  double last_idle_time_ = 0.;
 
   // The camera object used by the application.
   unique_ptr<internal::Camera> camera_;
@@ -214,18 +221,18 @@ class Application {
   unique_ptr<internal::Shooter> shooter_;
 
   // Set to true to display help.
-  bool show_help_;
+  bool show_help_ = false;
 
-  bool vertical_sync_;  // On by default.
-  int swap_interval_;
+  bool vertical_sync_ = true;
+  int swap_interval_ = 1;
 
   // Grid display settings.
-  bool show_grid_;
-  bool show_axes_;
+  bool show_grid_ = true;
+  bool show_axes_ = true;
 
   // Capture settings.
-  bool capture_video_;
-  bool capture_screenshot_;
+  bool capture_video_ = false;
+  bool capture_screenshot_ = false;
 
   // The renderer utility object used by the application.
   unique_ptr<internal::RendererImpl> renderer_;
@@ -239,7 +246,9 @@ class Application {
   unique_ptr<Record> render_time_;
 
   // Current screen resolution.
-  Resolution resolution_;
+  Resolution window_size_;
+  Resolution framebuffer_size_;
+  ozz::math::Float2 content_scale_;
 
   // Help message.
   ozz::string help_;

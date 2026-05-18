@@ -35,17 +35,19 @@
 // GL and GL ext requires that ptrdif_t is defined on APPLE platforms.
 #include <cstddef>
 
-// Don't allow gl.h to automatically include glext.h
+// Prevent system gl.h from auto-including glext.h (Linux/macOS Mesa).
 #define GL_GLEXT_LEGACY
 
-// Including glfw includes gl.h
-#include "GL/glfw.h"
-
 #ifdef __EMSCRIPTEN__
+#include <GLFW/emscripten_glfw3.h>
+
 // include features as core functions.
 #include <GLES2/gl2.h>
 
 #else  // __EMSCRIPTEN__
+
+// Including GLFW3 also pulls in the platform-appropriate OpenGL headers.
+#include "GLFW/glfw3.h"
 
 // Detects already defined GL_VERSION and deduces required extensions.
 #ifndef GL_VERSION_1_5
