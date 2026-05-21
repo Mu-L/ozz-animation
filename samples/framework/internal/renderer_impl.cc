@@ -1850,12 +1850,14 @@ bool RendererImpl::InitOpenGLExtensions() {
     return false;
   }
   if (!optional_success) {
-    log::Log() << "Failed to initialize some optional GL extensions."
-               << std::endl;
+    log::Log() << "Some optional GL extensions aren't available." << std::endl;
   }
 
+#ifndef __EMSCRIPTEN__
   GL_ARB_instanced_arrays_supported =
       glfwExtensionSupported("GL_ARB_instanced_arrays") != 0;
+#endif  // __EMSCRIPTEN__
+
   if (GL_ARB_instanced_arrays_supported) {
     log::Log() << "Optional GL_ARB_instanced_arrays extensions found."
                << std::endl;

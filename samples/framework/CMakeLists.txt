@@ -30,11 +30,22 @@ add_library(sample_framework STATIC
 
 # Samples requires OpenGL package.
 if(NOT EMSCRIPTEN)
-  add_subdirectory(${PROJECT_SOURCE_DIR}/extern/glfw glfw)
-  target_link_libraries(glfw PRIVATE ozz_suppress_warnings)
-  target_link_libraries(sample_framework glfw)
+  find_package(OpenGL REQUIRED)
+  set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+  set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+  set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+  set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
+  set(GLFW_BUILD_WAYLAND OFF CACHE BOOL "" FORCE)
+  add_subdirectory(${PROJECT_SOURCE_DIR}/extern/glfw glfw3)
+  target_link_libraries(sample_framework glfw OpenGL::GL)
+  target_compile_definitions(sample_framework PRIVATE GL_SILENCE_DEPRECATION)
+
+  # Keep extern/glfw include path to access bundled glext.h extension headers.
+  target_include_directories(sample_framework PRIVATE ${PROJECT_SOURCE_DIR}/extern/glfw/include)
 else()
-  target_link_options(sample_framework PUBLIC -sUSE_GLFW=2 -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2)
+  target_compile_options(sample_framework PUBLIC "--use-port=contrib.glfw3")
+  target_link_options(sample_framework PUBLIC "--use-port=contrib.glfw3")
+  target_link_options(sample_framework PUBLIC -sFULL_ES3=1 -sASSERTIONS=1)
 endif()
 
 target_link_libraries(sample_framework

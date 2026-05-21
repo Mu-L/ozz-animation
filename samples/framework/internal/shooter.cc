@@ -60,6 +60,7 @@ Shooter::Shooter()
 
   // OpenGL ES2 compatibility extension allows to query for implementation best
   // format and type.
+#ifndef __EMSCRIPTEN__
   if (glfwExtensionSupported("GL_ARB_ES2_compatibility") != 0) {
     GLint format;
     GL(GetIntegerv(GL_IMPLEMENTATION_COLOR_READ_FORMAT_OES, &format));
@@ -87,7 +88,9 @@ Shooter::Shooter()
           break;
       }
     }
-  } else {
+  } else
+#endif  // __EMSCRIPTEN__
+  {
     // Default fail safe format and types.
     gl_shot_format_ = GL_RGBA;
     image_format_ = image::Format::kRGBA;
