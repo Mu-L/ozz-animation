@@ -632,17 +632,14 @@ TEST(RestPose, SkeletonBuilder) {
   raw_skeleton.roots.resize(1);
   RawSkeleton::Joint& root = raw_skeleton.roots[0];
   root.name = "j0";
-  root.transform = Transform::identity();
   root.transform.translation = Float3(1.f, 2.f, 3.f);
   root.transform.rotation = Quaternion(1.f, 0.f, 0.f, 0.f);
 
   root.children.resize(2);
   root.children[0].name = "j1";
-  root.children[0].transform = Transform::identity();
   root.children[0].transform.rotation = Quaternion(0.f, 1.f, 0.f, 0.f);
   root.children[0].transform.translation = Float3(4.f, 5.f, 6.f);
   root.children[1].name = "j2";
-  root.children[1].transform = Transform::identity();
   root.children[1].transform.translation = Float3(7.f, 8.f, 9.f);
   root.children[1].transform.scale = Float3(-27.f, 46.f, 9.f);
 

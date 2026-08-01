@@ -1,6 +1,3 @@
-# Adds the sample framework to the include path.
-include_directories(./)
-
 # Adds framework.
 add_subdirectory(framework)
 
@@ -9,6 +6,7 @@ add_subdirectory(additive)
 add_subdirectory(attach)
 add_subdirectory(baked)
 add_subdirectory(blend)
+add_subdirectory(browse)
 add_subdirectory(foot_ik)
 add_subdirectory(look_at)
 add_subdirectory(millipede)

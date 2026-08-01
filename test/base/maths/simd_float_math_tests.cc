@@ -368,6 +368,7 @@ TEST(ArithmeticFloat, ozz_simd_math) {
   EXPECT_FLOAT_EQ(ozz::math::GetX(cross), -27.f);
   EXPECT_FLOAT_EQ(ozz::math::GetY(cross), 6.f);
   EXPECT_FLOAT_EQ(ozz::math::GetZ(cross), 13.f);
+  EXPECT_FLOAT_EQ(ozz::math::GetW(cross), 0.f);
 
   const ozz::math::SimdFloat4 rcp = ozz::math::RcpEst(b);
   EXPECT_SIMDFLOAT3_EQ_EST(rcp, 1.f / 4.f, 1.f / 5.f, -1.f / 6.f);

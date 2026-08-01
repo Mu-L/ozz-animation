@@ -39,6 +39,11 @@ using ozz::animation::SamplingJob;
 using ozz::animation::offline::AnimationBuilder;
 using ozz::animation::offline::RawAnimation;
 
+ozz::math::SoaTransform MakeTransform(float _t) {
+  auto v = ozz::math::simd_float4::Load(_t, _t, _t, _t);
+  return {{v, v, v}, {v, v, v, v}, {v, v, v}};
+}
+
 TEST(JobValidity, SamplingJob) {
   RawAnimation raw_animation;
   raw_animation.duration = 1.f;
@@ -109,7 +114,7 @@ TEST(JobValidity, SamplingJob) {
     EXPECT_FALSE(job.Run());
   }
 
-  { // valid job with output smaller than animation, but not empty.
+  {  // valid job with output smaller than animation, but not empty.
     RawAnimation big_raw_animation;
     big_raw_animation.duration = 1.f;
     big_raw_animation.tracks.resize(2);
@@ -260,7 +265,7 @@ TEST(Sampling, SamplingJob) {
   job.output = output;
 
   for (size_t i = 0; i < OZZ_ARRAY_SIZE(result); ++i) {
-    memset(output, 0xde, sizeof(output));
+    output[0] = MakeTransform(93.f);
     job.ratio = result[i].sample_time / animation->duration();
     EXPECT_TRUE(job.Validate());
     EXPECT_TRUE(job.Run());
@@ -289,10 +294,8 @@ TEST(SamplingNoTrack, SamplingJob) {
   ozz::unique_ptr<Animation> animation(builder(raw_animation));
   ASSERT_TRUE(animation);
 
-  ozz::math::SoaTransform test_output[1];
-  ozz::math::SoaTransform output[1];
-  memset(test_output, 0xde, sizeof(test_output));
-  memset(output, 0xde, sizeof(output));
+  ozz::math::SoaTransform test_output[1] = {MakeTransform(93.f)};
+  ozz::math::SoaTransform output[1] = {MakeTransform(93.f)};
 
   SamplingJob job;
   job.ratio = 0.f;
@@ -325,7 +328,7 @@ TEST(Sampling1Track0Key, SamplingJob) {
   job.output = output;
 
   for (float t = -.2f; t < 1.2f; t += .1f) {
-    memset(output, 0xde, sizeof(output));
+    output[0] = MakeTransform(93.f);
     job.ratio = t;
     EXPECT_TRUE(job.Validate());
     EXPECT_TRUE(job.Run());
@@ -362,7 +365,7 @@ TEST(Sampling1Track1Key, SamplingJob) {
   job.output = output;
 
   for (float t = -.2f; t < 1.2f; t += .1f) {
-    memset(output, 0xde, sizeof(output));
+    output[0] = MakeTransform(93.f);
     job.ratio = t;
     EXPECT_TRUE(job.Validate());
     EXPECT_TRUE(job.Run());
@@ -394,8 +397,7 @@ TEST(Sampling1Track2Keys, SamplingJob) {
   ozz::unique_ptr<Animation> animation(builder(raw_animation));
   ASSERT_TRUE(animation);
 
-  ozz::math::SoaTransform output[1];
-  memset(output, 0xde, sizeof(output));
+  ozz::math::SoaTransform output[1] = {MakeTransform(93.f)};
 
   SamplingJob job;
   job.animation = animation.get();
@@ -500,8 +502,7 @@ TEST(Sampling4Track2Keys, SamplingJob) {
   ozz::unique_ptr<Animation> animation(builder(raw_animation));
   ASSERT_TRUE(animation);
 
-  ozz::math::SoaTransform output[1];
-  memset(output, 0xde, sizeof(output));
+  ozz::math::SoaTransform output[1] = {MakeTransform(93.f)};
 
   SamplingJob job;
   job.animation = animation.get();

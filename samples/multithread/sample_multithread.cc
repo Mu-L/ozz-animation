@@ -47,10 +47,10 @@
 #include "ozz/base/maths/vec_float.h"
 #include "ozz/options/options.h"
 
-#if EMSCRIPTEN
+#if __EMSCRIPTEN__
 #include <emscripten.h>
 #include <emscripten/threading.h>
-#endif  // EMSCRIPTEN
+#endif  // __EMSCRIPTEN__
 
 // Skeleton archive can be specified as an option.
 OZZ_OPTIONS_DECLARE_STRING(skeleton,
@@ -77,11 +77,11 @@ const int kMinGrainSize = 32;
 
 // Checks if platform has threading support.
 bool HasThreadingSupport() {
-#ifdef EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
   return emscripten_has_threading_support();
-#else   // EMSCRIPTEN
+#else   // __EMSCRIPTEN__
   return true;
-#endif  // EMSCRIPTEN
+#endif  // __EMSCRIPTEN__
 }
 
 class MultithreadSampleApplication : public ozz::sample::Application {
@@ -309,16 +309,17 @@ class MultithreadSampleApplication : public ozz::sample::Application {
     return true;
   }
 
-  virtual void GetSceneBounds(ozz::math::Box* _bound) const {
-    _bound->min.x = -(kWidth / 2) * kInterval;
-    _bound->max.x =
-        _bound->min.x + ozz::math::Min(num_characters_, kWidth) * kInterval;
-    _bound->min.y = 0.f;
-    _bound->max.y = ((num_characters_ / kWidth / kDepth) + 1) * kInterval;
-    _bound->min.z = -(kDepth / 2) * kInterval;
-    _bound->max.z =
-        _bound->min.z +
-        ozz::math::Min(num_characters_ / kWidth, kDepth) * kInterval;
+  virtual ozz::math::Box GetSceneBounds() const {
+    ozz::math::Box bound;
+    bound.min.x = -(kWidth / 2) * kInterval;
+    bound.max.x =
+        bound.min.x + ozz::math::Min(num_characters_, kWidth) * kInterval;
+    bound.min.y = 0.f;
+    bound.max.y = ((num_characters_ / kWidth / kDepth) + 1) * kInterval;
+    bound.min.z = -(kDepth / 2) * kInterval;
+    bound.max.z = bound.min.z +
+                  ozz::math::Min(num_characters_ / kWidth, kDepth) * kInterval;
+    return bound;
   }
 
   // Runtime skeleton.

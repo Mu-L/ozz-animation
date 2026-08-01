@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.30)
 
 # Defines the project's name
 project(ozz)
@@ -8,7 +8,7 @@ get_directory_property(is_sub_project PARENT_DIRECTORY)
 
 # Current version
 set(OZZ_VERSION_MAJOR 0)
-set(OZZ_VERSION_MINOR 16)
+set(OZZ_VERSION_MINOR 17)
 set(OZZ_VERSION_PATCH 0)
 set(OZZ_VERSION ${OZZ_VERSION_MAJOR}.${OZZ_VERSION_MINOR}.${OZZ_VERSION_PATCH})
 
@@ -57,7 +57,7 @@ if(ozz_build_tools AND ozz_build_fbx)
   set(FBX_MSVC_RT_DLL ${ozz_build_msvc_rt_dll})
 
   # Search for FBX sdk package
-  find_package(Fbx 2016)
+  find_package(Fbx 2020)
 
   # Disables ozz_build_fbx if Fbx SDK isn't found.
   if(NOT FBX_FOUND)
@@ -90,10 +90,10 @@ if(ozz_build_tests)
 endif()
 
 # Locates media directory.
-set(ozz_media_directory "${PROJECT_SOURCE_DIR}/media")
+set(ozz_media_directory "${PROJECT_SOURCE_DIR}/media" CACHE PATH "Media directory")
 
 # Creates temporary directory for tests inputs/outputs.
-set(ozz_temp_directory ${PROJECT_BINARY_DIR}/temp)
+set(ozz_temp_directory "${PROJECT_BINARY_DIR}/temp" CACHE PATH "Temporary directory")
 file(MAKE_DIRECTORY ${ozz_temp_directory})
 
 # Outputs selected options (can be modified by the command line)

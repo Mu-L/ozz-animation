@@ -35,6 +35,7 @@
 #include "ozz/animation/runtime/local_to_model_job.h"
 #include "ozz/animation/runtime/sampling_job.h"
 #include "ozz/animation/runtime/skeleton.h"
+#include "ozz/animation/runtime/skeleton_utils.h"
 #include "ozz/base/log.h"
 #include "ozz/base/maths/box.h"
 #include "ozz/base/maths/simd_math.h"
@@ -61,18 +62,12 @@ OZZ_OPTIONS_DECLARE_STRING(mesh,
 // Defines IK chain joint names.
 // Joints must be from the same hierarchy (all ancestors of the first joint
 // listed) and ordered from child to parent.
-const char* kJointNames[] = {"Head", "Spine3", "Spine2", "Spine1"};
-const size_t kMaxChainLength = OZZ_ARRAY_SIZE(kJointNames);
+const char* kJointChainFirst = "DEF-spine.002";
+const char* kJointChainLast = "DEF-head";
+const auto kJointChainLocalUpAxis = ozz::math::simd_float4::z_axis();
 
 // Forward vector in head local-space.
 const ozz::math::SimdFloat4 kHeadForward = ozz::math::simd_float4::y_axis();
-
-// Defines Up vectors for each joint. This is skeleton/rig dependant.
-const ozz::math::SimdFloat4 kJointUpVectors[] = {
-    ozz::math::simd_float4::x_axis(), ozz::math::simd_float4::x_axis(),
-    ozz::math::simd_float4::x_axis(), ozz::math::simd_float4::x_axis()};
-static_assert(OZZ_ARRAY_SIZE(kJointUpVectors) == kMaxChainLength,
-              "Array size mismatch.");
 
 class LookAtSampleApplication : public ozz::sample::Application {
  protected:
@@ -138,13 +133,14 @@ class LookAtSampleApplication : public ozz::sample::Application {
     // need to be updated between each pass, as joints are ordered from child to
     // parent.
     int previous_joint = ozz::animation::Skeleton::kNoParent;
-    for (int i = 0, joint = joints_chain_[0]; i < chain_length_;
-         ++i, previous_joint = joint, joint = joints_chain_[i]) {
+    for (int i = 0, joint; i < chain_length_; ++i, previous_joint = joint) {
+      joint = joints_chain_[i];
+
       // Setups the model-space matrix of the joint being processed by IK.
       ik_job.joint = &models_[joint];
 
       // Setups joint local-space up vector.
-      ik_job.up = kJointUpVectors[i];
+      ik_job.up = kJointChainLocalUpAxis;
 
       // Setups weights of IK job.
       // the last joint being processed needs a full weight (1.f) to ensure
@@ -276,36 +272,38 @@ class LookAtSampleApplication : public ozz::sample::Application {
       return false;
     }
 
-    // Look for each joint in the chain.
-    int found = 0;
-    for (int i = 0; i < skeleton_.num_joints() && found != kMaxChainLength;
-         ++i) {
-      const char* joint_name = skeleton_.joint_names()[i];
-      if (std::strcmp(joint_name, kJointNames[found]) == 0) {
-        joints_chain_[found] = i;
-
-        // Restart search
-        ++found;
-        i = 0;
-      }
-    }
-
-    // Exit if all joints weren't found.
-    if (found != kMaxChainLength) {
-      ozz::log::Err()
-          << "At least a joint wasn't found in the skeleton hierarchy."
-          << std::endl;
-      return false;
-    }
-
-    // Validates joints are order from child to parent of the same hierarchy.
-    if (!ValidateJointsOrder(skeleton_, joints_chain_)) {
-      ozz::log::Err() << "Joints aren't properly ordered, they must be from "
-                         "the same hierarchy (all ancestors of the first joint "
-                         "listed) and ordered from child to parent."
+    // Build joint chain, starting from the end, appending each parent up to the
+    // first.
+    const int last_joint = FindJoint(skeleton_, kJointChainLast);
+    if (last_joint < 0) {
+      ozz::log::Err() << "Last joint of the chain " +
+                             std::string(kJointChainLast) +
+                             " not found in skeleton hierarchy."
                       << std::endl;
       return false;
     }
+
+    // Append each parent up to kJointChainFirst.
+    int first_joint = last_joint;
+    for (; first_joint != ozz::animation::Skeleton::kNoParent;
+         first_joint = skeleton_.joint_parents()[first_joint]) {
+      joints_chain_.push_back(first_joint);
+      if (std::strcmp(skeleton_.joint_names()[first_joint], kJointChainFirst) ==
+          0) {
+        break;
+      }
+    }
+    if (first_joint == ozz::animation::Skeleton::kNoParent) {
+      ozz::log::Err() << "First joint of the chain " +
+                             std::string(kJointChainFirst) + " not found in " +
+                             std::string(kJointChainLast) +
+                             " skeleton hierarchy."
+                      << std::endl;
+      return false;
+    }
+
+    // Initialize current length to the maximum.
+    chain_length_ = static_cast<int>(joints_chain_.size());
 
     // Allocates runtime buffers.
     const int num_soa_joints = skeleton_.num_soa_joints();
@@ -341,33 +339,13 @@ class LookAtSampleApplication : public ozz::sample::Application {
     return true;
   }
 
-  // Traverses the hierarchy from the first joint to the root, to check if
-  // joints are all ancestors (same branch), and ordered.
-  bool ValidateJointsOrder(const ozz::animation::Skeleton& _skeleton,
-                           ozz::span<const int> _joints) {
-    const size_t count = _joints.size();
-    if (count == 0) {
-      return true;
-    }
-
-    size_t i = 1;
-    for (int joint = _joints[0], parent = _skeleton.joint_parents()[joint];
-         i != count && joint != ozz::animation::Skeleton::kNoParent;
-         joint = parent, parent = _skeleton.joint_parents()[joint]) {
-      if (parent == _joints[i]) {
-        ++i;
-      }
-    }
-
-    return count == i;
-  }
-
   virtual bool OnGui(ozz::sample::ImGui* _im_gui) {
     char label[64];
 
     _im_gui->DoCheckBox("Enable ik", &enable_ik_);
     snprintf(label, sizeof(label), "IK chain length: %d", chain_length_);
-    _im_gui->DoSlider(label, 0, kMaxChainLength, &chain_length_);
+    _im_gui->DoSlider(label, 0, static_cast<int>(joints_chain_.size()),
+                      &chain_length_);
     snprintf(label, sizeof(label), "Joint weight %.2g", joint_weight_);
     _im_gui->DoSlider(label, 0.f, 1.f, &joint_weight_);
     snprintf(label, sizeof(label), "Chain weight %.2g", chain_weight_);
@@ -430,10 +408,9 @@ class LookAtSampleApplication : public ozz::sample::Application {
     return true;
   }
 
-  virtual void GetSceneBounds(ozz::math::Box* _bound) const {
-    const ozz::math::Float3 radius(target_extent_ * .8f);
-    _bound->min = target_offset_ - radius;
-    _bound->max = target_offset_ + radius;
+  virtual ozz::math::Box GetSceneBounds() const {
+    const ozz::math::Float3 radius(target_extent_ * .5f);
+    return {target_offset_ - radius, target_offset_ + radius};
   }
 
  private:
@@ -466,17 +443,17 @@ class LookAtSampleApplication : public ozz::sample::Application {
   // Indices of the joints that are IKed for look-at purpose.
   // Joints must be from the same hierarchy (all ancestors of the first joint
   // listed) and ordered from child to parent.
-  int joints_chain_[kMaxChainLength];
+  ozz::vector<int> joints_chain_;
 
   // Sample settings
 
   // Target position management.
-  ozz::math::Float3 target_offset_ = {.2f, 1.5f, -.3f};
+  ozz::math::Float3 target_offset_ = {.2f, 2.f, -1.4f};
   float target_extent_ = 1.f;
   ozz::math::Float3 target_;
 
   // Offset of the look at position in (head) joint local-space.
-  ozz::math::Float3 eyes_offset_ = {.07f, .1f, 0.f};
+  ozz::math::Float3 eyes_offset_ = {0.f, .12f, .14f};
 
   // IK settings
 
@@ -484,11 +461,11 @@ class LookAtSampleApplication : public ozz::sample::Application {
   bool enable_ik_ = true;
 
   // Set length of the chain that is IKed, between 0 and kMaxChainLength.
-  int chain_length_ = kMaxChainLength;
+  int chain_length_ = 0;
 
   // Weight given to every joint of the chain. If any joint has a weight of 1,
   // no other following joint will contribute (as the target will be reached).
-  float joint_weight_ = .5f;
+  float joint_weight_ = .35f;
 
   // Overall weight given to the IK on the full chain. This allows blending in
   // and out of IK.

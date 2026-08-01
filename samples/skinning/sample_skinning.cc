@@ -37,6 +37,7 @@
 #include "ozz/animation/runtime/sampling_job.h"
 #include "ozz/animation/runtime/skeleton.h"
 #include "ozz/base/log.h"
+#include "ozz/base/maths/box.h"
 #include "ozz/base/maths/math_ex.h"
 #include "ozz/base/maths/simd_math.h"
 #include "ozz/base/maths/soa_transform.h"
@@ -249,9 +250,18 @@ class SkinningSampleApplication : public ozz::sample::Application {
     return true;
   }
 
-  virtual void GetSceneBounds(ozz::math::Box* _bound) const {
-    ozz::sample::ComputeSkeletonBounds(skeleton_,
-                                       ozz::math::Float4x4::identity(), _bound);
+  virtual ozz::math::Box GetSceneBounds() const {
+    return ozz::sample::ComputeSkeletonBounds(skeleton_,
+                                              ozz::math::Float4x4::identity());
+  }
+
+  virtual bool GetCameraInitialSetup(ozz::math::Float3* _center,
+                                     ozz::math::Float2* _angles,
+                                     float* _distance) const {
+    *_center = ozz::math::Float3(4.7f, 2.3f, -.13f);
+    *_angles = ozz::math::Float2(-ozz::math::kPi * 1.f / 15.f, 0.f);
+    *_distance = 0.f;
+    return true;
   }
 
  private:

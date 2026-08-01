@@ -3,14 +3,19 @@ if(NOT ozz_build_fbx)
 endif()
 
 add_library(ozz_animation_fbx
-  ${PROJECT_SOURCE_DIR}/include/ozz/animation/offline/fbx/export.h
-  ${PROJECT_SOURCE_DIR}/include/ozz/animation/offline/fbx/fbx.h
   fbx.cc
-  ${PROJECT_SOURCE_DIR}/include/ozz/animation/offline/fbx/fbx_animation.h
   fbx_animation.cc
-  ${PROJECT_SOURCE_DIR}/include/ozz/animation/offline/fbx/fbx_skeleton.h
   fbx_skeleton.cc)
-  
+
+target_sources(ozz_animation_fbx PUBLIC
+  FILE_SET HEADERS
+  BASE_DIRS ${PROJECT_SOURCE_DIR}/include
+  FILES
+    ${PROJECT_SOURCE_DIR}/include/ozz/animation/offline/fbx/export.h
+    ${PROJECT_SOURCE_DIR}/include/ozz/animation/offline/fbx/fbx.h
+    ${PROJECT_SOURCE_DIR}/include/ozz/animation/offline/fbx/fbx_animation.h
+    ${PROJECT_SOURCE_DIR}/include/ozz/animation/offline/fbx/fbx_skeleton.h)
+
 target_compile_definitions(ozz_animation_fbx PRIVATE  $<$<BOOL:${BUILD_SHARED_LIBS}>:OZZ_BUILD_ANIMATIONFBX_LIB>)
 
 target_link_libraries(ozz_animation_fbx
@@ -18,7 +23,9 @@ target_link_libraries(ozz_animation_fbx
   fbx::sdk)
 set_target_properties(ozz_animation_fbx PROPERTIES FOLDER "ozz/tools")
 
-install(TARGETS ozz_animation_fbx DESTINATION lib)
+install(TARGETS ozz_animation_fbx
+  DESTINATION lib
+  FILE_SET HEADERS DESTINATION include)
 
 fuse_target("ozz_animation_fbx")
 
@@ -27,6 +34,8 @@ add_executable(fbx2ozz
   fbx2ozz.cc
   fbx2ozz_anim.cc
   fbx2ozz_skel.cc)
+
+target_include_directories(fbx2ozz PRIVATE ${PROJECT_SOURCE_DIR}/src)
 target_link_libraries(fbx2ozz
   ozz_animation_tools
   ozz_animation_fbx)
@@ -39,25 +48,31 @@ install(TARGETS fbx2ozz DESTINATION bin/tools)
 # Gerenate binary data to a specific folder (${ozz_media_directory}/bin)
 set(build_configurations
   # Library data
-  "/fbx/pab/skeleton.fbx\;{\"skeleton\":{\"filename\":\"pab_skeleton.ozz\",\"import\":{\"enable\":true}},\"animations\":[]}\;output:pab_skeleton.ozz"
-  "/fbx/pab/atlas.fbx\;{\"skeleton\":{\"filename\":\"pab_skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"pab_atlas_raw.ozz\",\"raw\":true,\"optimize\":false}]}\;output:pab_atlas_raw.ozz\;depend:pab_skeleton.ozz"
-  "/fbx/pab/atlas.fbx\;{\"skeleton\":{\"filename\":\"pab_skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"pab_atlas.ozz\"}]}\;output:pab_atlas.ozz\;depend:pab_skeleton.ozz"
-  "/fbx/pab/locomotions.fbx\;{\"skeleton\":{\"filename\":\"pab_skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"pab_*.ozz\"}]}\;output:pab_walk.ozz\;output:pab_jog.ozz\;output:pab_run.ozz\;depend:pab_skeleton.ozz"
-  "/fbx/pab/locomotions.fbx\;{\"skeleton\":{\"filename\":\"pab_skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"pab_*_raw.ozz\",\"raw\":true,\"optimize\":false}]}\;output:pab_walk_raw.ozz\;output:pab_jog_raw.ozz\;output:pab_run_raw.ozz\;depend:pab_skeleton.ozz"
-  "/fbx/pab/crossarms.fbx\;{\"skeleton\":{\"filename\":\"pab_skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"pab_crossarms.ozz\"}]}\;output:pab_crossarms.ozz\;depend:pab_skeleton.ozz"
-  "/fbx/pab/crackhead.fbx\;{\"skeleton\":{\"filename\":\"pab_skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"pab_crackhead.ozz\"},{\"filename\":\"pab_crackhead_additive.ozz\",\"additive\":true}]}\;output:pab_crackhead_additive.ozz\;output:pab_crackhead.ozz\;depend:pab_skeleton.ozz"
-  "/fbx/pab/hand.fbx\;{\"skeleton\":{\"filename\":\"pab_skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"clip\":\"curl\",\"filename\":\"pab_curl_additive.ozz\",\"additive\":true,\"additive_reference\":\"skeleton\"},{\"clip\":\"splay\",\"filename\":\"pab_splay_additive.ozz\",\"additive\":true,\"additive_reference\":\"skeleton\"}]}\;output:pab_curl_additive.ozz\;output:pab_splay_additive.ozz\;depend:pab_skeleton.ozz"
-  
+
+  # Pro Animation Bank
+  "/fbx/pab/skeleton.fbx\;{\"skeleton\":{\"filename\":\"pab/skeleton.ozz\",\"import\":{\"enable\":true}},\"animations\":[]}\;output:pab/skeleton.ozz"
+  "/fbx/pab/atlas.fbx\;{\"skeleton\":{\"filename\":\"pab/skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"pab/atlas_raw.ozz\",\"raw\":true,\"optimize\":false}]}\;output:pab/atlas_raw.ozz\;depend:pab/skeleton.ozz"
+  "/fbx/pab/atlas.fbx\;{\"skeleton\":{\"filename\":\"pab/skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"pab/atlas.ozz\"}]}\;output:pab/atlas.ozz\;depend:pab/skeleton.ozz"
+  "/fbx/pab/locomotions.fbx\;{\"skeleton\":{\"filename\":\"pab/skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"pab/*.ozz\"}]}\;output:pab/walk.ozz\;output:pab/jog.ozz\;output:pab/run.ozz\;depend:pab/skeleton.ozz"
+  "/fbx/pab/locomotions.fbx\;{\"skeleton\":{\"filename\":\"pab/skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"pab/*_raw.ozz\",\"raw\":true,\"optimize\":false}]}\;output:pab/walk_raw.ozz\;output:pab/jog_raw.ozz\;output:pab/run_raw.ozz\;depend:pab/skeleton.ozz"
+  "/fbx/pab/crossarms.fbx\;{\"skeleton\":{\"filename\":\"pab/skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"pab/crossarms.ozz\"}]}\;output:pab/crossarms.ozz\;depend:pab/skeleton.ozz"
+  "/fbx/pab/crackhead.fbx\;{\"skeleton\":{\"filename\":\"pab/skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"pab/crackhead.ozz\"},{\"filename\":\"pab/crackhead_additive.ozz\",\"additive\":true}]}\;output:pab/crackhead_additive.ozz\;output:pab/crackhead.ozz\;depend:pab/skeleton.ozz"
+  "/fbx/pab/hand.fbx\;{\"skeleton\":{\"filename\":\"pab/skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"clip\":\"curl\",\"filename\":\"pab/curl_additive.ozz\",\"additive\":true,\"additive_reference\":\"skeleton\"},{\"clip\":\"splay\",\"filename\":\"pab/splay_additive.ozz\",\"additive\":true,\"additive_reference\":\"skeleton\"}]}\;output:pab/curl_additive.ozz\;output:pab/splay_additive.ozz\;depend:pab/skeleton.ozz"
+
+  # Quaternius
+  # Note that we don't list all animations here, so it might create issues if dependencies are needed
+  "/fbx/quaternius/ual.fbx\;{\"skeleton\":{\"filename\":\"quaternius/skeleton.ozz\",\"import\":{\"enable\":true}},\"animations\":[{\"filename\":\"quaternius/*.ozz\"}]}\;output:quaternius/skeleton.ozz\;output:quaternius/Rig_A_TPose.ozz"
+
   # Library data with root motion
-  "/fbx/pab/atlas.fbx\;{\"skeleton\":{\"filename\":\"pab_skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"pab_atlas_no_motion.ozz\",\"tracks\":{\"motion\":{\"enable\":true,\"rotation\":{\"loop\":true},\"filename\":\"pab_atlas_motion_track.ozz\"}}}]}\;output:pab_atlas_no_motion.ozz\;output:pab_atlas_motion_track.ozz\;depend:pab_skeleton.ozz"
-  "/fbx/pab/locomotions.fbx\;{\"skeleton\":{\"filename\":\"pab_skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"pab_*_no_motion.ozz\",\"tracks\":{\"motion\":{\"enable\":true,\"rotation\":{\"components\":\"\"},\"filename\":\"pab_*_motion_track.ozz\"}}}]}\;output:pab_walk_no_motion.ozz\;output:pab_jog_no_motion.ozz\;output:pab_run_no_motion.ozz\;output:pab_walk_motion_track.ozz\;output:pab_jog_motion_track.ozz\;output:pab_run_motion_track.ozz\;depend:pab_skeleton.ozz"
-  
+  "/fbx/pab/atlas.fbx\;{\"skeleton\":{\"filename\":\"pab/skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"pab/atlas_no_motion.ozz\",\"tracks\":{\"motion\":{\"enable\":true,\"rotation\":{\"loop\":true},\"filename\":\"pab/atlas_motion_track.ozz\"}}}]}\;output:pab/atlas_no_motion.ozz\;output:pab/atlas_motion_track.ozz\;depend:pab/skeleton.ozz"
+  "/fbx/pab/locomotions.fbx\;{\"skeleton\":{\"filename\":\"pab/skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"pab/*_no_motion.ozz\",\"tracks\":{\"motion\":{\"enable\":true,\"rotation\":{\"loop\":true},\"filename\":\"pab/*_motion_track.ozz\"}}}]}\;output:pab/walk_no_motion.ozz\;output:pab/jog_no_motion.ozz\;output:pab/run_no_motion.ozz\;output:pab/walk_motion_track.ozz\;output:pab/jog_motion_track.ozz\;output:pab/run_motion_track.ozz\;depend:pab/skeleton.ozz"
+
   # Robot user channels
   "/fbx/robot.fbx\;\;config_file:${PROJECT_SOURCE_DIR}/samples/user_channel/config.json\;output:robot_skeleton.ozz\;output:robot_animation.ozz\;output:robot_track_grasp.ozz"
 
   # Baked animation
   "/fbx/baked.fbx\;\;config_file:${PROJECT_SOURCE_DIR}/samples/baked/config.json\;output:baked_skeleton.ozz\;output:baked_animation.ozz"
-  
+
   # Ruby
   "/fbx/sketchfab/ruby.fbx\;{\"skeleton\":{\"filename\":\"ruby_skeleton.ozz\",\"import\":{\"enable\":true}},\"animations\":[{\"filename\":\"ruby_animation.ozz\"}]}\;output:ruby_skeleton.ozz\;output:ruby_animation.ozz"
 
@@ -66,10 +81,10 @@ set(build_configurations
   "/fbx/pab/skeleton.fbx\;{\"skeleton\":{\"filename\":\"versioning/raw_skeleton_v1_be.ozz\",\"import\":{\"enable\":true,\"raw\":true}},\"animations\":[]}\;output:versioning/raw_skeleton_v1_be.ozz\;option:--endian=big"
   "/fbx/pab/skeleton.fbx\;{\"skeleton\":{\"filename\":\"versioning/skeleton_v2_le.ozz\",\"import\":{\"enable\":true}},\"animations\":[]}\;output:versioning/skeleton_v2_le.ozz\;option:--endian=little"
   "/fbx/pab/skeleton.fbx\;{\"skeleton\":{\"filename\":\"versioning/skeleton_v2_be.ozz\",\"import\":{\"enable\":true}},\"animations\":[]}\;output:versioning/skeleton_v2_be.ozz\;option:--endian=big"
-  "/fbx/pab/run.fbx\;{\"skeleton\":{\"filename\":\"pab_skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"versioning/raw_animation_v3_le.ozz\",\"raw\":true}]}\;output:versioning/raw_animation_v3_le.ozz\;option:--endian=little\;depend:pab_skeleton.ozz"
-  "/fbx/pab/run.fbx\;{\"skeleton\":{\"filename\":\"pab_skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"versioning/raw_animation_v3_be.ozz\",\"raw\":true}]}\;output:versioning/raw_animation_v3_be.ozz\;option:--endian=big\;depend:pab_skeleton.ozz"
-  "/fbx/pab/run.fbx\;{\"skeleton\":{\"filename\":\"pab_skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"versioning/animation_v7_le.ozz\"}]}\;output:versioning/animation_v7_le.ozz\;option:--endian=little\;depend:pab_skeleton.ozz"
-  "/fbx/pab/run.fbx\;{\"skeleton\":{\"filename\":\"pab_skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"versioning/animation_v7_be.ozz\"}]}\;output:versioning/animation_v7_be.ozz\;option:--endian=big\;depend:pab_skeleton.ozz"
+  "/fbx/pab/run.fbx\;{\"skeleton\":{\"filename\":\"pab/skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"versioning/raw_animation_v3_le.ozz\",\"raw\":true}]}\;output:versioning/raw_animation_v3_le.ozz\;option:--endian=little\;depend:pab/skeleton.ozz"
+  "/fbx/pab/run.fbx\;{\"skeleton\":{\"filename\":\"pab/skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"versioning/raw_animation_v3_be.ozz\",\"raw\":true}]}\;output:versioning/raw_animation_v3_be.ozz\;option:--endian=big\;depend:pab/skeleton.ozz"
+  "/fbx/pab/run.fbx\;{\"skeleton\":{\"filename\":\"pab/skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"versioning/animation_v7_le.ozz\"}]}\;output:versioning/animation_v7_le.ozz\;option:--endian=little\;depend:pab/skeleton.ozz"
+  "/fbx/pab/run.fbx\;{\"skeleton\":{\"filename\":\"pab/skeleton.ozz\",\"import\":{\"enable\":false}},\"animations\":[{\"filename\":\"versioning/animation_v7_be.ozz\"}]}\;output:versioning/animation_v7_be.ozz\;option:--endian=big\;depend:pab/skeleton.ozz"
 
   # Collada
   "/collada/astro_max.dae\;{\"skeleton\":{\"filename\":\"astro_max_skeleton.ozz\",\"import\":{\"enable\":true}},\"animations\":[{\"filename\":\"astro_max_animation.ozz\"}]}\;output:astro_max_animation.ozz\;output:astro_max_skeleton.ozz"
@@ -92,7 +107,7 @@ foreach(line ${build_configurations})
   set(options "")
   set(depends "")
   set(config_file "")
-    
+
   # Loops over all elements to find parameters.
   foreach(element ${line})
     if (${element} MATCHES "output:(.*)")
@@ -117,6 +132,12 @@ foreach(line ${build_configurations})
   if (NOT outputs)
     message("Missing output file(s) list.")
   endif()
+
+  # Make sure output directory exists
+  foreach(output ${outputs})
+    cmake_path(GET output PARENT_PATH output_dir)
+    file(MAKE_DIRECTORY "${output_dir}")
+  endforeach()
 
   # Dump config file
   if(NOT config_file)

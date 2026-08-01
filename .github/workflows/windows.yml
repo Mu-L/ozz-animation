@@ -3,7 +3,7 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: windows-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -21,14 +21,14 @@ jobs:
             platform: x64
             option: default
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     
     - name: Install fbx sdk
       if: matrix.option != 'no_fbx'
       run: |
         md fbx
         cd fbx
-        Start-BitsTransfer -Source 'https://damassets.autodesk.net/content/dam/autodesk/www/adn/fbx/2020-3-4/fbx202034_fbxsdk_vs2022_win.exe' -Destination 'fbxsdk.exe'
+        Start-BitsTransfer -Source 'https://damassets.autodesk.net/content/dam/autodesk/www/files/fbx202039_fbxsdk_vs2022_win.exe' -Destination 'fbxsdk.exe'
         Start-Process -FilePath 'fbxsdk.exe' /S -Wait
         cd ..
     

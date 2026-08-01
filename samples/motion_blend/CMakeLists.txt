@@ -3,13 +3,13 @@
 add_custom_command(
   DEPENDS $<$<BOOL:${ozz_build_fbx}>:BUILD_DATA>
           "${CMAKE_CURRENT_LIST_DIR}/README.md"
-          "${ozz_media_directory}/bin/pab_skeleton.ozz"
-          "${ozz_media_directory}/bin/pab_walk_no_motion.ozz"
-          "${ozz_media_directory}/bin/pab_jog_no_motion.ozz"
-          "${ozz_media_directory}/bin/pab_jog_no_motion.ozz"
-          "${ozz_media_directory}/bin/pab_walk_motion_track.ozz"
-          "${ozz_media_directory}/bin/pab_jog_motion_track.ozz"
-          "${ozz_media_directory}/bin/pab_jog_motion_track.ozz"
+          "${ozz_media_directory}/bin/pab/skeleton.ozz"
+          "${ozz_media_directory}/bin/pab/walk_no_motion.ozz"
+          "${ozz_media_directory}/bin/pab/jog_no_motion.ozz"
+          "${ozz_media_directory}/bin/pab/jog_no_motion.ozz"
+          "${ozz_media_directory}/bin/pab/walk_motion_track.ozz"
+          "${ozz_media_directory}/bin/pab/jog_motion_track.ozz"
+          "${ozz_media_directory}/bin/pab/jog_motion_track.ozz"
   OUTPUT  "${CMAKE_CURRENT_BINARY_DIR}/README.md"
           "${CMAKE_CURRENT_BINARY_DIR}/media/skeleton.ozz"
           "${CMAKE_CURRENT_BINARY_DIR}/media/animation1.ozz"
@@ -20,13 +20,13 @@ add_custom_command(
           "${CMAKE_CURRENT_BINARY_DIR}/media/motion3.ozz"
   COMMAND ${CMAKE_COMMAND} -E make_directory media
   COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_LIST_DIR}/README.md" .
-  COMMAND ${CMAKE_COMMAND} -E copy "${ozz_media_directory}/bin/pab_skeleton.ozz" "./media/skeleton.ozz"
-  COMMAND ${CMAKE_COMMAND} -E copy "${ozz_media_directory}/bin/pab_walk_no_motion.ozz" "./media/animation1.ozz"
-  COMMAND ${CMAKE_COMMAND} -E copy "${ozz_media_directory}/bin/pab_jog_no_motion.ozz" "./media/animation2.ozz"
-  COMMAND ${CMAKE_COMMAND} -E copy "${ozz_media_directory}/bin/pab_run_no_motion.ozz" "./media/animation3.ozz"
-  COMMAND ${CMAKE_COMMAND} -E copy "${ozz_media_directory}/bin/pab_walk_motion_track.ozz" "./media/motion1.ozz"
-  COMMAND ${CMAKE_COMMAND} -E copy "${ozz_media_directory}/bin/pab_jog_motion_track.ozz" "./media/motion2.ozz"
-  COMMAND ${CMAKE_COMMAND} -E copy "${ozz_media_directory}/bin/pab_run_motion_track.ozz" "./media/motion3.ozz"
+  COMMAND ${CMAKE_COMMAND} -E copy "${ozz_media_directory}/bin/pab/skeleton.ozz" "./media/skeleton.ozz"
+  COMMAND ${CMAKE_COMMAND} -E copy "${ozz_media_directory}/bin/pab/walk_no_motion.ozz" "./media/animation1.ozz"
+  COMMAND ${CMAKE_COMMAND} -E copy "${ozz_media_directory}/bin/pab/jog_no_motion.ozz" "./media/animation2.ozz"
+  COMMAND ${CMAKE_COMMAND} -E copy "${ozz_media_directory}/bin/pab/run_no_motion.ozz" "./media/animation3.ozz"
+  COMMAND ${CMAKE_COMMAND} -E copy "${ozz_media_directory}/bin/pab/walk_motion_track.ozz" "./media/motion1.ozz"
+  COMMAND ${CMAKE_COMMAND} -E copy "${ozz_media_directory}/bin/pab/jog_motion_track.ozz" "./media/motion2.ozz"
+  COMMAND ${CMAKE_COMMAND} -E copy "${ozz_media_directory}/bin/pab/run_motion_track.ozz" "./media/motion3.ozz"
   VERBATIM)
 
 # Adds sample executable

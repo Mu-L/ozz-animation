@@ -37,6 +37,7 @@
 #include "ozz/animation/runtime/animation.h"
 #include "ozz/animation/runtime/local_to_model_job.h"
 #include "ozz/animation/runtime/skeleton.h"
+#include "ozz/animation/runtime/skeleton_utils.h"
 #include "ozz/animation/runtime/track.h"
 #include "ozz/base/io/archive.h"
 #include "ozz/base/io/stream.h"
@@ -78,10 +79,30 @@ int PlaybackController::set_time_ratio(float _ratio) {
   //  backward.
   previous_time_ratio_ = time_ratio_;
   if (loop_) {
-    // Wraps in the unit interval [0:1]
-    const float loops = floorf(_ratio);
-    time_ratio_ = _ratio - loops;
-    return static_cast<int>(loops);
+    // Split into integral and fractional parts.
+    // frac in (-1,1), loopsf is integral part as float
+    float loopsf = 0.0f;
+    float frac = std::modf(_ratio, &loopsf);
+
+    constexpr float eps = 1e-6f;
+    if (std::fabs(frac) < eps) {
+      // Exact integer case: handle 0 separately.
+      if (std::fabs(_ratio) < eps) {
+        // _ratio == 0 -> start of the first loop
+        frac = 0.0f;
+        // loopsf stays 0
+      } else {  // Exact non-zero integer -> end of the previous loop
+        frac = 1.0f;
+        loopsf -= 1.0f;
+      }
+    } else if (frac < 0.0f) {
+      // Normalize negatives into [0,1] by shifting one loop back.
+      frac += 1.0f;
+      loopsf -= 1.0f;
+    }
+
+    time_ratio_ = frac;
+    return static_cast<int>(loopsf);
   } else {
     // Clamps in the unit interval [0:1].
     time_ratio_ = math::Clamp(0.f, _ratio, 1.f);
@@ -206,46 +227,20 @@ bool RawSkeletonEditor::OnGui(animation::offline::RawSkeleton* _skeleton,
 
 // Uses LocalToModelJob to compute skeleton model space posture, then forwards
 // to ComputePostureBounds
-void ComputeSkeletonBounds(const animation::Skeleton& _skeleton,
-                           const ozz::math::Float4x4& _transform,
-                           math::Box* _bound) {
-  using ozz::math::Float4x4;
-
-  assert(_bound);
-
-  // Set a default box.
-  *_bound = ozz::math::Box();
-
-  const int num_joints = _skeleton.num_joints();
-  if (!num_joints) {
-    return;
-  }
-
-  // Allocate matrix array, out of memory is handled by the LocalToModelJob.
-  ozz::vector<ozz::math::Float4x4> models(num_joints);
-
-  // Compute model space rest pose.
-  ozz::animation::LocalToModelJob job;
-  job.input = _skeleton.joint_rest_poses();
-  job.output = make_span(models);
-  job.skeleton = &_skeleton;
-  if (job.Run()) {
-    // Forwards to posture function.
-    ComputePostureBounds(job.output, _transform, _bound);
-  }
+math::Box ComputeSkeletonBounds(const animation::Skeleton& _skeleton,
+                                const ozz::math::Float4x4& _transform) {
+  const auto models = ozz::animation::GetRestPoseModelSpace(_skeleton);
+  return ComputePostureBounds(make_span(models), _transform);
 }
 
 // Loop through matrices and collect min and max bounds.
-void ComputePostureBounds(ozz::span<const ozz::math::Float4x4> _models,
-                          const ozz::math::Float4x4& _transform,
-                          math::Box* _bound) {
-  assert(_bound);
-
+math::Box ComputePostureBounds(ozz::span<const ozz::math::Float4x4> _models,
+                               const ozz::math::Float4x4& _transform) {
   // Set a default box.
-  *_bound = ozz::math::Box();
+  auto bound = ozz::math::Box();
 
   if (_models.empty()) {
-    return;
+    return bound;
   }
 
   // Loops through matrices and stores min/max.
@@ -260,10 +255,10 @@ void ComputePostureBounds(ozz::span<const ozz::math::Float4x4> _models,
   }
 
   // Stores in math::Box structure.
-  math::Store3PtrU(min, &_bound->min.x);
-  math::Store3PtrU(max, &_bound->max.x);
+  math::Store3PtrU(min, &bound.min.x);
+  math::Store3PtrU(max, &bound.max.x);
 
-  return;
+  return bound;
 }
 
 void MultiplySoATransformQuaternion(

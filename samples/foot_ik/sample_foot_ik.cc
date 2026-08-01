@@ -683,10 +683,6 @@ class FootIKSampleApplication : public ozz::sample::Application {
     return true;
   }
 
-  virtual void GetSceneBounds(ozz::math::Box* _box) const {
-    *_box = ozz::math::Box();
-  }
-
   ozz::math::Float4x4 GetRootTransform() const {
     return ozz::math::Float4x4::Translation(root_translation_) *
            ozz::math::Float4x4::FromEuler(ozz::math::Float3(root_yaw_, 0, 0));

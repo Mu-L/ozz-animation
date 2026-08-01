@@ -121,8 +121,7 @@ bool GetElement(const _Element& _layer, int _vertex_id, int _control_point,
 template <typename _T>
 bool Compare(const _T* _a, const _T* _b, size_t _count) {
   size_t i = 0;
-  for (; i < _count && _a[i] == _b[i]; ++i)
-    ;
+  for (; i < _count && _a[i] == _b[i]; ++i);
   return i == _count;
 }
 }  // namespace
@@ -554,7 +553,7 @@ bool BuildSkin(FbxMesh* _fbx_mesh,
     // Stores joint's indices and weights.
     size_t influence_count = inv.size();
     if (influence_count == 0) {
-      vertex_skin_mappings[i].push_back({0,1.f});
+      vertex_skin_mappings[i].push_back({0, 1.f});
       influence_count = 1;
     }
 
@@ -944,9 +943,9 @@ int main(int _argc, const char** _argv) {
                     << std::endl;
   }
 
+  FbxGeometryConverter converter(fbx_manager);
   {  // Clean and triangulates the scene.
     ozz::log::LogV() << "Triangulating scene." << std::endl;
-    FbxGeometryConverter converter(fbx_manager);
     converter.RemoveBadPolygonsFromMeshes(scene_loader.scene());
     if (!converter.Triangulate(scene_loader.scene(), true)) {
       ozz::log::Err() << "Failed to triangulating meshes." << std::endl;
@@ -956,13 +955,17 @@ int main(int _argc, const char** _argv) {
 
   // Take all meshes
   ozz::vector<ozz::sample::Mesh> meshes;
-  meshes.resize(num_meshes);
 
   for (int m = 0; m < num_meshes; ++m) {
     FbxMesh* mesh = scene_loader.scene()->GetSrcObject<FbxMesh>(m);
+    if (!mesh->IsTriangleMesh()) {  // Triangulation can have failed.
+      ozz::log::Log() << "Mesh " << m << " \"" << mesh->GetName()
+                      << "\" isn't triangulated, skipping." << std::endl;
+      continue;
+    }
 
     // Allocates output mesh.
-    ozz::sample::Mesh& output_mesh = meshes[m];
+    ozz::sample::Mesh& output_mesh = meshes.emplace_back();
     output_mesh.parts.resize(1);
 
     ControlPointsRemap remap;

@@ -393,8 +393,8 @@ class MotionBlendSampleApplication : public ozz::sample::Application {
     return true;
   }
 
-  virtual void GetSceneBounds(ozz::math::Box* _bound) const {
-    ozz::sample::ComputeSkeletonBounds(skeleton_, transform_, _bound);
+  virtual ozz::math::Box GetSceneBounds() const {
+    return ozz::sample::ComputeSkeletonBounds(skeleton_, transform_);
   }
 
  private:

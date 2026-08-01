@@ -157,7 +157,7 @@ bool ExtractAnimation(FbxSceneLoader& _scene_loader, const SamplingInfo& _info,
                        << "\". Using skeleton rest pose instead." << std::endl;
 
       const math::Transform& rest_pose =
-          ozz::animation::GetJointLocalRestPose(_skeleton, i);
+          ozz::animation::GetJointRestPoseLocalSpace(_skeleton, i);
       const math::Float4x4 local_matrix = math::Float4x4::FromAffine(rest_pose);
 
       ozz::vector<math::Float4x4>& node_matrices = world_matrices[i];

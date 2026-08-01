@@ -37,10 +37,10 @@
 #include <unistd.h>
 #endif  // __APPLE__
 
-#if EMSCRIPTEN
+#if __EMSCRIPTEN__
 #include <emscripten.h>
 #include <emscripten/html5.h>
-#endif  // EMSCRIPTEN
+#endif  // __EMSCRIPTEN__
 
 #include "framework/image.h"
 #include "framework/internal/camera.h"
@@ -87,27 +87,14 @@ OZZ_OPTIONS_DECLARE_INT_FN(resolution, "Resolution index (0 to 17).", 5, false,
 
 namespace ozz {
 namespace sample {
-Application* Application::application_ = nullptr;
 
 Application::Application()
-    : exit_(false),
-      freeze_(false),
-      fix_update_rate(false),
-      fixed_update_rate(60.f),
-      time_factor_(1.f),
-      time_(0.f),
-      last_idle_time_(0.),
-      show_help_(false),
-      vertical_sync_(true),
-      swap_interval_(1),
-      show_grid_(true),
-      show_axes_(true),
-      capture_video_(false),
-      capture_screenshot_(false),
-      fps_(New<Record>(128)),
+    : fps_(New<Record>(128)),
       update_time_(New<Record>(128)),
       render_time_(New<Record>(128)),
-      resolution_(resolution_presets[0]) {
+      window_size_(resolution_presets[0]),
+      framebuffer_size_(resolution_presets[0]),
+      content_scale_(1.f) {
 #ifndef NDEBUG
   // Assert presets are correctly sorted.
   for (int i = 1; i < kNumPresets; ++i) {
@@ -122,12 +109,6 @@ Application::~Application() {}
 
 int Application::Run(int _argc, const char** _argv, const char* _version,
                      const char* _title) {
-  // Only one application at a time can be ran.
-  if (application_) {
-    return EXIT_FAILURE;
-  }
-  application_ = this;
-
   // Starting application
   log::Out() << "Starting sample \"" << _title << "\" version \"" << _version
              << "\"" << std::endl;
@@ -146,7 +127,7 @@ int Application::Run(int _argc, const char** _argv, const char* _version,
   }
 
   // Fetch initial resolution.
-  resolution_ = resolution_presets[OPTIONS_resolution];
+  window_size_ = resolution_presets[OPTIONS_resolution];
 
 #ifdef __APPLE__
   // On OSX, when run from Finder, working path is the root path. This does not
@@ -163,29 +144,46 @@ int Application::Run(int _argc, const char** _argv, const char* _version,
   // Open an OpenGL window
   bool success = true;
   if (OPTIONS_render) {
+    auto error_callback = [](int error, const char* description) {
+      ozz::log::Err() << "GLFW error " << error << ": " << description
+                      << std::endl;
+    };
+    glfwSetErrorCallback(error_callback);
+
     // Initialize GLFW
     if (!glfwInit()) {
-      application_ = nullptr;
       return EXIT_FAILURE;
     }
 
     // Setup GL context.
     const int gl_version_major = 3, gl_version_minor = 2;
-    glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR, gl_version_major);
-    glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR, gl_version_minor);
-    glfwOpenWindowHint(GLFW_FSAA_SAMPLES, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, gl_version_major);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, gl_version_minor);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
+    glfwWindowHint(GLFW_SAMPLES, 4);
+
 #ifndef NDEBUG
-    glfwOpenWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 #endif  // NDEBUG
 
+#ifdef __EMSCRIPTEN__
+    emscripten::glfw3::SetNextWindowCanvasSelector("sample_canvas");
+#endif  // __EMSCRIPTEN__
+
     // Initializes rendering before looping.
-    if (!glfwOpenWindow(resolution_.width, resolution_.height, 8, 8, 8, 8, 32,
-                        0, GLFW_WINDOW)) {
+    window_ = glfwCreateWindow(window_size_.width, window_size_.height, _title,
+                               nullptr, nullptr);
+    if (!window_) {
       log::Err() << "Failed to open OpenGL window. Required OpenGL version is "
                  << gl_version_major << "." << gl_version_minor << "."
                  << std::endl;
       success = false;
     } else {
+      // So appllication can access window from static callbacks.
+      glfwSetWindowUserPointer(window_, this);
+      glfwMakeContextCurrent(window_);
+
       log::Out() << "Successfully opened OpenGL window version \""
                  << glGetString(GL_VERSION) << "\"." << std::endl;
 
@@ -206,17 +204,26 @@ int Application::Run(int _argc, const char** _argv, const char* _version,
         shooter_ = make_unique<internal::Shooter>();
         im_gui_ = make_unique<internal::ImGuiImpl>();
 
-#ifndef EMSCRIPTEN  // Better not rename web page.
-        glfwSetWindowTitle(_title);
-#endif  // EMSCRIPTEN
-
         // Setup the window and installs callbacks.
         glfwSwapInterval(vertical_sync_ ? swap_interval_ : 0);
-        glfwSetWindowSizeCallback(&ResizeCbk);
-        glfwSetWindowCloseCallback(&CloseCbk);
+        glfwSetWindowSizeCallback(window_, ResizeCbk);
+        glfwSetFramebufferSizeCallback(window_, ResizeCbk);
+        glfwSetWindowCloseCallback(window_, CloseCbk);
+
+#ifdef __EMSCRIPTEN__
+        // Makes the canvas resizable to the size of its div container
+        emscripten::glfw3::MakeCanvasResizable(window_, "sample_container");
+#endif  // __EMSCRIPTEN__
+
+        // GLFW3 does not fire an initial resize event on window creation.
+        // Trigger it manually to initialize viewport and camera projection
+        // matrices.
+        Resize();
 
         // Loop the sample.
         success = Loop();
+
+        // Ending sample, releases resources.
         shooter_.reset();
         im_gui_.reset();
       }
@@ -225,6 +232,8 @@ int Application::Run(int _argc, const char** _argv, const char* _version,
     }
 
     // Closes window and terminates GLFW.
+    glfwDestroyWindow(window_);
+    window_ = nullptr;
     glfwTerminate();
 
   } else {
@@ -237,16 +246,17 @@ int Application::Run(int _argc, const char** _argv, const char* _version,
     log::Err() << "An error occurred during sample execution." << std::endl;
   }
 
-  application_ = nullptr;
-
   return success ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 // Helper function to detecte key pressed and released.
 template <int _Key>
-bool KeyPressed() {
-  static int previous_key = glfwGetKey(_Key);
-  const int key = glfwGetKey(_Key);
+bool KeyPressed(GLFWwindow* _window) {
+  if (!_window) {
+    return false;
+  }
+  static int previous_key = GLFW_RELEASE;
+  const int key = glfwGetKey(_window, _Key);
   const bool pressed = previous_key == GLFW_PRESS && key == GLFW_RELEASE;
   previous_key = key;
   return pressed;
@@ -256,18 +266,18 @@ Application::LoopStatus Application::OneLoop(int _loops) {
   Profiler profile(fps_.get());  // Profiles frame.
 
   // Tests for a manual exit request.
-  if (exit_ || glfwGetKey(GLFW_KEY_ESC) == GLFW_PRESS) {
+  if (exit_ || KeyPressed<GLFW_KEY_ESCAPE>(window_)) {
     return kBreak;
   }
 
   // Test for an exit request.
-  if (OPTIONS_max_idle_loops > 0 && _loops > OPTIONS_max_idle_loops) {
+  if (OPTIONS_max_idle_loops >= 0 && _loops > OPTIONS_max_idle_loops) {
     return kBreak;
   }
 
-// Don't overload the cpu if the window is not active.
-#ifndef EMSCRIPTEN
-  if (OPTIONS_render && !glfwGetWindowParam(GLFW_ACTIVE)) {
+#ifndef __EMSCRIPTEN__
+  // Don't overload the cpu if the window is not active.
+  if (OPTIONS_render && !glfwGetWindowAttrib(window_, GLFW_FOCUSED)) {
     glfwWaitEvents();  // Wait...
 
     // Reset last update time in order to stop the time while the app isn't
@@ -276,23 +286,14 @@ Application::LoopStatus Application::OneLoop(int _loops) {
 
     return kContinue;  // ...but don't do anything.
   }
-#else
-  int width, height;
-  if (emscripten_get_canvas_element_size("#canvas", &width, &height) !=
-      EMSCRIPTEN_RESULT_SUCCESS) {
-    return kBreakFailure;
-  }
-  if (width != resolution_.width || height != resolution_.height) {
-    ResizeCbk(width, height);
-  }
-#endif  // EMSCRIPTEN
+#endif  // __EMSCRIPTEN__
 
   // Enable/disable help on F1 key.
-  show_help_ = show_help_ ^ KeyPressed<GLFW_KEY_F1>();
+  show_help_ = show_help_ ^ KeyPressed<GLFW_KEY_F1>(window_);
 
   // Capture screenshot or video.
-  capture_screenshot_ = KeyPressed<'S'>();
-  capture_video_ = capture_video_ ^ KeyPressed<'V'>();
+  capture_screenshot_ = KeyPressed<'S'>(window_);
+  capture_video_ = capture_video_ ^ KeyPressed<'V'>(window_);
 
   // Do the main loop.
   if (!Idle(_loops == 0)) {
@@ -321,9 +322,9 @@ bool Application::Loop() {
 
 // Emscripten requires to manage the main loop on their own, as browsers don't
 // like infinite blocking functions.
-#ifdef EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
   emscripten_set_main_loop_arg(OneLoopCbk, this, 0, 1);
-#else   // EMSCRIPTEN
+#else   // __EMSCRIPTEN__
   // Loops.
   for (int loops = 0; success; ++loops) {
     const LoopStatus status = OneLoop(loops);
@@ -332,7 +333,7 @@ bool Application::Loop() {
       break;
     }
   }
-#endif  // EMSCRIPTEN
+#endif  // __EMSCRIPTEN__
 
   // De-initialize sample, even in case of initialization failure.
   OnDestroy();
@@ -390,8 +391,10 @@ bool Application::Display() {
     capture_screenshot_ = false;
   }
 
-  // Swaps current window.
-  glfwSwapBuffers();
+  // Swaps current window and polls events (GLFW3 no longer does this
+  // implicitly on swap, unlike GLFW2's GLFW_AUTO_POLL_EVENTS).
+  glfwSwapBuffers(window_);
+  glfwPollEvents();
 
   return success;
 }
@@ -443,14 +446,14 @@ bool Application::Idle(bool _first_frame) {
 
   // Update camera model-view matrix.
   if (camera_) {
-    math::Box scene_bounds;
-    GetSceneBounds(&scene_bounds);
+    const auto scene_bounds = GetSceneBounds();
 
     math::Float4x4 camera_transform;
     if (GetCameraOverride(&camera_transform)) {
-      camera_->Update(camera_transform, scene_bounds, delta, _first_frame);
+      camera_->Update(window_, camera_transform, scene_bounds, delta,
+                      _first_frame);
     } else {
-      camera_->Update(scene_bounds, delta, _first_frame);
+      camera_->Update(window_, scene_bounds, delta, _first_frame);
     }
   }
 
@@ -464,14 +467,17 @@ bool Application::Gui() {
 
   // Finds gui area.
   const float kGuiMargin = 2.f;
-  ozz::math::RectInt window_rect(0, 0, resolution_.width, resolution_.height);
+  ozz::math::RectInt window_rect{0, 0, window_size_.width, window_size_.height};
 
   // Fills ImGui's input structure.
   internal::ImGuiImpl::Inputs input;
-  int mouse_y;
-  glfwGetMousePos(&input.mouse_x, &mouse_y);
+  double mouse_dx, mouse_dy;
+  glfwGetCursorPos(window_, &mouse_dx, &mouse_dy);
+  input.mouse_x = static_cast<int>(mouse_dx);
+  const int mouse_y = static_cast<int>(mouse_dy);
   input.mouse_y = window_rect.height - mouse_y;
-  input.lmb_pressed = glfwGetMouseButton(GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+  input.lmb_pressed =
+      glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
 
   // Starts frame
   im_gui_->BeginFrame(input, window_rect, renderer_.get());
@@ -479,45 +485,49 @@ bool Application::Gui() {
   // Downcast to public imgui.
   ImGui* im_gui = im_gui_.get();
 
-  // Do floating gui.
-  if (!show_help_) {
-    success = OnFloatingGui(im_gui);
-  }
-
-  // Help gui.
-  {
-    math::RectFloat rect(kGuiMargin, kGuiMargin,
-                         window_rect.width - kGuiMargin * 2.f,
-                         window_rect.height - kGuiMargin * 2.f);
-    // Doesn't constrain form is it's opened, so it covers all screen.
-    ImGui::Form form(im_gui, "Show help", rect, &show_help_, !show_help_);
-    if (show_help_) {
-      im_gui->DoLabel(help_.c_str(), ImGui::kLeft, false);
+  if (window_rect.width > (kGuiMargin + kFormWidth) * 2.f) {
+    // Do floating gui.
+    if (!show_help_) {
+      success = OnFloatingGui(im_gui);
     }
-  }
 
-  // Do framework gui.
-  if (!show_help_ && success &&
-      window_rect.width > (kGuiMargin + kFormWidth) * 2.f) {
-    static bool open = true;
-    math::RectFloat rect(kGuiMargin, kGuiMargin, kFormWidth,
-                         window_rect.height - kGuiMargin * 2.f - kHelpMargin);
-    ImGui::Form form(im_gui, "Framework", rect, &open, true);
-    if (open) {
-      success = FrameworkGui();
+    // Help gui.
+    {
+      math::RectFloat rect{kGuiMargin, kGuiMargin,
+                           window_rect.width - kGuiMargin * 2.f,
+                           window_rect.height - kGuiMargin * 2.f};
+      // Doesn't constrain form is it's opened, so it covers all screen.
+      ImGui::Form form(im_gui, "Show help", rect, &show_help_, !show_help_);
+      if (show_help_) {
+        im_gui->DoLabel(help_.c_str(), ImGui::kLeft, false);
+      }
     }
-  }
 
-  // Do sample gui.
-  if (!show_help_ && success && window_rect.width > kGuiMargin + kFormWidth) {
-    static bool open = true;
-    math::RectFloat rect(window_rect.width - kFormWidth - kGuiMargin,
-                         kGuiMargin, kFormWidth,
-                         window_rect.height - kGuiMargin * 2 - kHelpMargin);
-    ImGui::Form form(im_gui, "Sample", rect, &open, true);
-    if (open) {
-      // Forwards event to the inherited application.
-      success = OnGui(im_gui);
+    if (!show_help_) {
+      // Do framework gui.
+      if (success) {
+        static bool open = true;
+        math::RectFloat rect{
+            kGuiMargin, kGuiMargin, kFormWidth,
+            window_rect.height - kGuiMargin * 2.f - kHelpMargin};
+        ImGui::Form form(im_gui, "Framework", rect, &open, true);
+        if (open) {
+          success = FrameworkGui();
+        }
+      }
+
+      // Do sample gui.
+      if (success) {
+        static bool open = true;
+        math::RectFloat rect{window_rect.width - kFormWidth - kGuiMargin,
+                             kGuiMargin, kFormWidth,
+                             window_rect.height - kGuiMargin * 2 - kHelpMargin};
+        ImGui::Form form(im_gui, "Sample", rect, &open, true);
+        if (open) {
+          // Forwards event to the inherited application.
+          success = OnGui(im_gui);
+        }
+      }
     }
   }
 
@@ -602,7 +612,8 @@ bool Application::FrameworkGui() {
     ImGui::OpenClose options(im_gui, "Options", &open);
     if (open) {
       // Multi-sampling.
-      static bool fsaa_available = glfwGetWindowParam(GLFW_FSAA_SAMPLES) != 0;
+      static bool fsaa_available =
+          glfwGetWindowAttrib(window_, GLFW_SAMPLES) != 0;
       static bool fsaa_enabled = fsaa_available;
       if (im_gui->DoCheckBox("Anti-aliasing", &fsaa_enabled, fsaa_available)) {
         if (fsaa_enabled) {
@@ -628,21 +639,21 @@ bool Application::FrameworkGui() {
     int preset_lookup = 0;
     for (; preset_lookup < kNumPresets - 1; ++preset_lookup) {
       const Resolution& preset = resolution_presets[preset_lookup];
-      if (preset.width > resolution_.width) {
+      if (preset.width > window_size_.width) {
         break;
-      } else if (preset.width == resolution_.width) {
-        if (preset.height >= resolution_.height) {
+      } else if (preset.width == window_size_.width) {
+        if (preset.height >= window_size_.height) {
           break;
         }
       }
     }
 
-    std::snprintf(label, sizeof(label), "Resolution: %dx%d", resolution_.width,
-                  resolution_.height);
+    std::snprintf(label, sizeof(label), "Resolution: %dx%d", window_size_.width,
+                  window_size_.height);
     if (im_gui->DoSlider(label, 0, kNumPresets - 1, &preset_lookup)) {
       // Resolution changed.
-      resolution_ = resolution_presets[preset_lookup];
-      glfwSetWindowSize(resolution_.width, resolution_.height);
+      window_size_ = resolution_presets[preset_lookup];
+      glfwSetWindowSize(window_, window_size_.width, window_size_.height);
     }
   }
 
@@ -686,7 +697,7 @@ bool Application::GetCameraInitialSetup(math::Float3*, math::Float2*,
 // Default implementation doesn't override camera location.
 bool Application::GetCameraOverride(math::Float4x4*) const { return false; }
 
-void Application::GetSceneBounds(math::Box*) const {}
+math::Box Application::GetSceneBounds() const { return {}; }
 
 math::Float2 Application::WorldToScreen(const math::Float3& _world) const {
   const math::SimdFloat4 ndc =
@@ -694,7 +705,7 @@ math::Float2 Application::WorldToScreen(const math::Float3& _world) const {
       math::simd_float4::Load(_world.x, _world.y, _world.z, 1.f);
 
   const math::SimdFloat4 resolution = math::simd_float4::FromInt(
-      math::simd_int4::Load(resolution_.width, resolution_.height, 0, 0));
+      math::simd_int4::Load(window_size_.width, window_size_.height, 0, 0));
   const ozz::math::SimdFloat4 screen =
       resolution * ((ndc / math::SplatW(ndc)) + math::simd_float4::one()) /
       math::simd_float4::Load1(2.f);
@@ -703,22 +714,49 @@ math::Float2 Application::WorldToScreen(const math::Float3& _world) const {
   return ret;
 }
 
-void Application::ResizeCbk(int _width, int _height) {
-  // Stores new resolution settings.
-  application_->resolution_.width = _width;
-  application_->resolution_.height = _height;
-
-  // Uses the full viewport.
-  GL(Viewport(0, 0, _width, _height));
-
-  // Forwards screen size to camera and shooter.
-  application_->camera_->Resize(_width, _height);
-  application_->shooter_->Resize(_width, _height);
+/*static*/ void Application::ResizeCbk(GLFWwindow* _window, int, int) {
+  Application* app =
+      reinterpret_cast<Application*>(glfwGetWindowUserPointer(_window));
+  app->Resize();
 }
 
-int Application::CloseCbk() {
-  application_->exit_ = true;
-  return GL_FALSE;  // The window will be closed while exiting the main loop.
+void Application::Resize() {
+  Application* app =
+      reinterpret_cast<Application*>(glfwGetWindowUserPointer(window_));
+
+  glfwGetWindowSize(window_, &window_size_.width, &window_size_.height);
+
+  glfwGetFramebufferSize(window_, &framebuffer_size_.width,
+                         &framebuffer_size_.height);
+
+  glfwGetWindowContentScale(window_, &content_scale_.x, &content_scale_.y);
+
+  /*
+  ozz::log::Out() << "Resize :" << window_size_.width << "x"
+                  << window_size_.height << ", " << framebuffer_size_.width
+                  << "x" << framebuffer_size_.height << ", " <<
+  content_scale_.x
+                  << "x" << content_scale_.y << std::endl;
+  */
+
+  // Uses the full viewport.
+  GL(Viewport(0, 0, GLsizei(framebuffer_size_.width),
+              GLsizei(framebuffer_size_.height)));
+
+  // Forwards screen size to camera and shooter.
+  app->camera_->Resize(framebuffer_size_.width, framebuffer_size_.height,
+                       content_scale_);
+  app->shooter_->Resize(framebuffer_size_.width, framebuffer_size_.height);
+}
+
+/*static*/ void Application::CloseCbk(GLFWwindow* _window) {
+  Application* app =
+      reinterpret_cast<Application*>(glfwGetWindowUserPointer(_window));
+
+  app->exit_ = true;
+  // Prevent GLFW from closing the window — we handle it at the end of the
+  // loop.
+  glfwSetWindowShouldClose(_window, GLFW_FALSE);
 }
 
 void Application::ParseReadme() {

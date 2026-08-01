@@ -12,15 +12,15 @@ endif()
 add_custom_command(
   DEPENDS $<$<BOOL:${ozz_build_fbx}>:BUILD_DATA>
           "${CMAKE_CURRENT_LIST_DIR}/README.md"
-          "${ozz_media_directory}/bin/pab_skeleton.ozz"
-          "${ozz_media_directory}/bin/pab_walk.ozz"
+          "${ozz_media_directory}/bin/pab/skeleton.ozz"
+          "${ozz_media_directory}/bin/pab/walk.ozz"
   OUTPUT  "${CMAKE_CURRENT_BINARY_DIR}/README.md"
           "${CMAKE_CURRENT_BINARY_DIR}/media/skeleton.ozz"
           "${CMAKE_CURRENT_BINARY_DIR}/media/animation.ozz"
   COMMAND ${CMAKE_COMMAND} -E make_directory media
   COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_LIST_DIR}/README.md" .
-  COMMAND ${CMAKE_COMMAND} -E copy "${ozz_media_directory}/bin/pab_skeleton.ozz" "./media/skeleton.ozz"
-  COMMAND ${CMAKE_COMMAND} -E copy "${ozz_media_directory}/bin/pab_walk.ozz" "./media/animation.ozz"
+  COMMAND ${CMAKE_COMMAND} -E copy "${ozz_media_directory}/bin/pab/skeleton.ozz" "./media/skeleton.ozz"
+  COMMAND ${CMAKE_COMMAND} -E copy "${ozz_media_directory}/bin/pab/walk.ozz" "./media/animation.ozz"
   VERBATIM)
 
 add_executable(sample_multithread
@@ -37,11 +37,11 @@ set_target_properties(sample_multithread
   PROPERTIES FOLDER "samples")
 
 if(EMSCRIPTEN)
-  set_target_properties(sample_multithread PROPERTIES COMPILE_FLAGS "-s USE_PTHREADS=1")
+  target_compile_options(sample_multithread PRIVATE "-s USE_PTHREADS=1")
 
   # Resource files are embedded to the output file with emscripten
-  set_target_properties(sample_multithread
-    PROPERTIES LINK_FLAGS "-s TOTAL_MEMORY=100663296 -s USE_PTHREADS=1 --embed-file media --embed-file README.md")
+  target_link_options(sample_multithread PRIVATE
+    "-s TOTAL_MEMORY=100663296" "-s USE_PTHREADS=1" "--embed-file media" "--embed-file README.md")
 
   install(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/sample_multithread.html

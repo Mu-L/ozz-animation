@@ -334,10 +334,9 @@ class TwoBoneIKSampleApplication : public ozz::sample::Application {
     return true;
   }
 
-  virtual void GetSceneBounds(ozz::math::Box* _bound) const {
+  virtual ozz::math::Box GetSceneBounds() const {
     const ozz::math::Float3 radius(target_extent_ * .5f);
-    _bound->min = target_offset_ - radius;
-    _bound->max = target_offset_ + radius;
+    return {target_offset_ - radius, target_offset_ + radius};
   }
 
  private:

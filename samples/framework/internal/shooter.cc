@@ -60,6 +60,7 @@ Shooter::Shooter()
 
   // OpenGL ES2 compatibility extension allows to query for implementation best
   // format and type.
+#ifndef __EMSCRIPTEN__
   if (glfwExtensionSupported("GL_ARB_ES2_compatibility") != 0) {
     GLint format;
     GL(GetIntegerv(GL_IMPLEMENTATION_COLOR_READ_FORMAT_OES, &format));
@@ -87,7 +88,9 @@ Shooter::Shooter()
           break;
       }
     }
-  } else {
+  } else
+#endif  // __EMSCRIPTEN__
+  {
     // Default fail safe format and types.
     gl_shot_format_ = GL_RGBA;
     image_format_ = image::Format::kRGBA;
@@ -117,7 +120,7 @@ void Shooter::Resize(int _width, int _height) {
   ProcessAll();
 
   // Resizes all pbos.
-#ifndef EMSCRIPTEN
+#ifndef __EMSCRIPTEN__
   for (int i = 0; i < kNumShots; ++i) {
     Shot& shot = shots_[i];
     shot.width = _width;
@@ -128,7 +131,7 @@ void Shooter::Resize(int _width, int _height) {
     assert(shot.cooldown == 0);  // Must have been processed.
   }
   GL(BindBuffer(GL_PIXEL_PACK_BUFFER, 0));
-#endif  // EMSCRIPTEN
+#endif  // __EMSCRIPTEN__
 }
 
 bool Shooter::Update() { return Process(); }
@@ -154,9 +157,9 @@ bool Shooter::Process() {
     }
 
     // Processes this shot.
-#ifdef EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
     (void)shot_number_;
-#else   // EMSCRIPTEN
+#else   // __EMSCRIPTEN__
     GL(BindBuffer(GL_PIXEL_PACK_BUFFER, shot.pbo));
     const void* pixels = glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
     if (pixels) {
@@ -169,7 +172,7 @@ bool Shooter::Process() {
       GL(UnmapBuffer(GL_PIXEL_PACK_BUFFER));
     }
     GL(BindBuffer(GL_PIXEL_PACK_BUFFER, 0));
-#endif  // EMSCRIPTEN
+#endif  // __EMSCRIPTEN__
   }
   return true;
 }
@@ -203,7 +206,7 @@ bool Shooter::Capture(int _buffer) {
   // Initializes cooldown.
   shot->cooldown = kInitialCountDown;
 
-#ifndef EMSCRIPTEN
+#ifndef __EMSCRIPTEN__
   // Copy pixels to shot's pbo.
   GL(ReadBuffer(_buffer));
   GL(BindBuffer(GL_PIXEL_PACK_BUFFER, shot->pbo));
@@ -211,7 +214,7 @@ bool Shooter::Capture(int _buffer) {
   GL(ReadPixels(0, 0, shot->width, shot->height, gl_shot_format_,
                 GL_UNSIGNED_BYTE, 0));
   GL(BindBuffer(GL_PIXEL_PACK_BUFFER, 0));
-#endif  // EMSCRIPTEN
+#endif  // __EMSCRIPTEN__
 
   return true;
 }

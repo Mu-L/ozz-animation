@@ -25,10 +25,8 @@
 //                                                                            //
 //----------------------------------------------------------------------------//
 
-#include "ozz/animation/offline/raw_skeleton.h"
-
 #include "gtest/gtest.h"
-
+#include "ozz/animation/offline/raw_skeleton.h"
 #include "ozz/base/io/archive.h"
 #include "ozz/base/io/stream.h"
 
@@ -70,17 +68,13 @@ TEST(Filled, RawSkeletonSerialize) {
   o_skeleton.roots.resize(1);
   RawSkeleton::Joint& root = o_skeleton.roots[0];
   root.name = "root";
-  root.transform = ozz::math::Transform::identity();
   root.children.resize(2);
   root.children[0].name = "j0";
-  root.children[0].transform = ozz::math::Transform::identity();
   root.children[0].transform.translation.x = 46.f;
   root.children[1].name = "j1";
-  root.children[1].transform = ozz::math::Transform::identity();
   root.children[1].transform.scale.y = 99.f;
   root.children[0].children.resize(1);
   root.children[0].children[0].name = "j2";
-  root.children[0].children[0].transform = ozz::math::Transform::identity();
   root.children[0].children[0].transform.rotation =
       ozz::math::Quaternion(0.f, 0.f, 1.f, 0.f);
 

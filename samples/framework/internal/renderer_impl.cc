@@ -70,12 +70,12 @@ RendererImpl::Model::~Model() {
 RendererImpl::RendererImpl(Camera* _camera) : camera_(_camera) {}
 
 RendererImpl::~RendererImpl() {
-#ifndef EMSCRIPTEN
+#ifndef __EMSCRIPTEN__
   if (vertex_array_o_) {
     GL(DeleteVertexArrays(1, &vertex_array_o_));
     vertex_array_o_ = 0;
   }
-#endif  // EMSCRIPTEN
+#endif  // __EMSCRIPTEN__
 
   if (dynamic_array_bo_) {
     GL(DeleteBuffers(1, &dynamic_array_bo_));
@@ -106,10 +106,10 @@ bool RendererImpl::Initialize() {
   }
 
   // Build and bind vertex array once for all
-#ifndef EMSCRIPTEN
+#ifndef __EMSCRIPTEN__
   GL(GenVertexArrays(1, &vertex_array_o_));
   GL(BindVertexArray(vertex_array_o_));
-#endif  // EMSCRIPTEN
+#endif  // __EMSCRIPTEN__
 
   // Builds the dynamic vbo
   GL(GenBuffers(1, &dynamic_array_bo_));
@@ -1227,9 +1227,9 @@ bool RendererImpl::DrawMesh(const Mesh& _mesh,
                             const ozz::math::Float4x4& _transform,
                             const Options& _options) {
   if (_options.wireframe) {
-#ifndef EMSCRIPTEN
+#ifndef __EMSCRIPTEN__
     GL(PolygonMode(GL_FRONT_AND_BACK, GL_LINE));
-#endif  // EMSCRIPTEN
+#endif  // __EMSCRIPTEN__
   }
 
   const int vertex_count = _mesh.vertex_count();
@@ -1382,9 +1382,9 @@ bool RendererImpl::DrawMesh(const Mesh& _mesh,
   }
 
   if (_options.wireframe) {
-#ifndef EMSCRIPTEN
+#ifndef __EMSCRIPTEN__
     GL(PolygonMode(GL_FRONT_AND_BACK, GL_FILL));
-#endif  // EMSCRIPTEN
+#endif  // __EMSCRIPTEN__
   }
 
   // Renders debug vertices.
@@ -1455,9 +1455,9 @@ bool RendererImpl::DrawSkinnedMesh(
   }
 
   if (_options.wireframe) {
-#ifndef EMSCRIPTEN
+#ifndef __EMSCRIPTEN__
     GL(PolygonMode(GL_FRONT_AND_BACK, GL_LINE));
-#endif  // EMSCRIPTEN
+#endif  // __EMSCRIPTEN__
   }
 
   const int vertex_count = _mesh.vertex_count();
@@ -1727,9 +1727,9 @@ bool RendererImpl::DrawSkinnedMesh(
   }
 
   if (_options.wireframe) {
-#ifndef EMSCRIPTEN
+#ifndef __EMSCRIPTEN__
     GL(PolygonMode(GL_FRONT_AND_BACK, GL_FILL));
-#endif  // EMSCRIPTEN
+#endif  // __EMSCRIPTEN__
   }
 
   // Renders debug vertices.
@@ -1850,12 +1850,14 @@ bool RendererImpl::InitOpenGLExtensions() {
     return false;
   }
   if (!optional_success) {
-    log::Log() << "Failed to initialize some optional GL extensions."
-               << std::endl;
+    log::Log() << "Some optional GL extensions aren't available." << std::endl;
   }
 
+#ifndef __EMSCRIPTEN__
   GL_ARB_instanced_arrays_supported =
       glfwExtensionSupported("GL_ARB_instanced_arrays") != 0;
+#endif  // __EMSCRIPTEN__
+
   if (GL_ARB_instanced_arrays_supported) {
     log::Log() << "Optional GL_ARB_instanced_arrays extensions found."
                << std::endl;

@@ -316,9 +316,9 @@ class UserChannelSampleApplication : public ozz::sample::Application {
     return true;
   }
 
-  virtual void GetSceneBounds(ozz::math::Box* _bound) const {
-    ozz::sample::ComputePostureBounds(make_span(models_),
-                                      ozz::math::Float4x4::identity(), _bound);
+  virtual ozz::math::Box GetSceneBounds() const {
+    return ozz::sample::ComputePostureBounds(make_span(models_),
+                                             ozz::math::Float4x4::identity());
   }
 
  private:

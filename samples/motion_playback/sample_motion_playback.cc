@@ -238,8 +238,8 @@ class MotionPlaybackSampleApplication : public ozz::sample::Application {
     return true;
   }
 
-  virtual void GetSceneBounds(ozz::math::Box* _bound) const {
-    *_bound = TransformBox(transform_, bounding_);
+  virtual ozz::math::Box GetSceneBounds() const {
+    return TransformBox(transform_, bounding_);
   }
 
  private:

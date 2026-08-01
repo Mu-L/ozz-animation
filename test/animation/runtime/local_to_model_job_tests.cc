@@ -56,8 +56,7 @@ TEST(JobValidity, LocalToModel) {
   ozz::unique_ptr<Skeleton> skeleton(builder(raw_skeleton));
   ASSERT_TRUE(skeleton);
 
-  ozz::math::SoaTransform input[2] = {ozz::math::SoaTransform::identity(),
-                                      ozz::math::SoaTransform::identity()};
+  ozz::math::SoaTransform input[2];
   ozz::math::Float4x4 output[5];
 
   // Default job

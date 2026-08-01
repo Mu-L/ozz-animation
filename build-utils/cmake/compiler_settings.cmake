@@ -9,23 +9,6 @@ include(CheckIncludeFiles)
 # Enables IDE folders y default
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-# ------------------------
-# Available build options
-
-# ------------------------
-# Lists all the cxx flags
-set(cxx_all_flags
-  CMAKE_CXX_FLAGS
-  CMAKE_C_FLAGS
-  CMAKE_CXX_FLAGS_DEBUG
-  CMAKE_C_FLAGS_DEBUG
-  CMAKE_CXX_FLAGS_MINSIZEREL
-  CMAKE_C_FLAGS_MINSIZEREL
-  CMAKE_CXX_FLAGS_RELWITHDEBINFO
-  CMAKE_C_FLAGS_RELWITHDEBINFO
-  CMAKE_CXX_FLAGS_RELEASE
-  CMAKE_C_FLAGS_RELEASE)
-
 # --------------------------------------
 # Cross compiler compilation flags
 
@@ -36,6 +19,9 @@ endif()
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Treat warnings as errors (portable, replaces /WX and -Werror)
+set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
 
 # Simd math force ref
 if(ozz_build_simd_ref)
@@ -57,8 +43,8 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   # Set the warning level to W4
   add_compile_options(/W4)
 
-  # Set warning as error
-  add_compile_options(/WX)
+  # Suppress warnings from headers included via SYSTEM include directories (/external:I)
+  add_compile_options(/external:W0)
 
   # Select whether to use the DLL version or the static library version of the Visual C++ runtime library.
   if(ozz_build_msvc_rt_dll)
@@ -76,19 +62,20 @@ else()
   # Enable extra level of warning
   # add_compile_options(-Wextra)
 
-  # Set warning as error
-  add_compile_options(-Werror)
-
   # ignored-attributes reports issue when using _m128 as template argument
   check_cxx_compiler_flag("-Wignored-attributes" W_IGNORED_ATTRIBUTES)
-
   if(W_IGNORED_ATTRIBUTES)
     add_compile_options(-Wno-ignored-attributes)
   endif()
 
+  # Disables deprecated literal operator warnings
+  check_cxx_compiler_flag("-Wdeprecated-literal-operator" W_DEPRECATED_LITERAL_OPERATOR)
+  if(W_DEPRECATED_LITERAL_OPERATOR)
+    add_compile_options(-Wno-deprecated-literal-operator)
+  endif()
+
   # Disables c98 retrocompatibility warnings
   check_cxx_compiler_flag("-Wc++98-compat-pedantic" W_98_COMPAT_PEDANTIC)
-
   if(W_98_COMPAT_PEDANTIC)
     add_compile_options(-Wno-c++98-compat-pedantic)
   endif()
@@ -101,7 +88,7 @@ else()
   # ----------------------
   # Sets emscripten output
   if(EMSCRIPTEN)
-    SET(CMAKE_EXECUTABLE_SUFFIX ".html")
+    set(CMAKE_EXECUTABLE_SUFFIX ".html")
     add_link_options(-s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=0)
 
     # if(NOT ozz_build_simd_ref)
@@ -110,35 +97,55 @@ else()
   endif()
 endif()
 
+# --------------------------------------
+# Interface library to suppress ozz's strict warning flags on third-party targets.
+# Apply with: target_link_libraries(<extern-target> PRIVATE ozz_suppress_warnings)
+# /W0 and -w each override all preceding warning-level flags for their target.
+add_library(ozz_suppress_warnings INTERFACE)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  target_compile_options(ozz_suppress_warnings INTERFACE /W0)
+else()
+  target_compile_options(ozz_suppress_warnings INTERFACE -w)
+endif()
+
 # ---------------------
-# Prints all the flags
-message(STATUS "---------------------------------------------------------")
-message(STATUS "Default build type is: ${CMAKE_BUILD_TYPE}")
-message(STATUS "The following compilation flags will be used:")
+# Prints all the flags (only in VERBOSE mode or above)
+cmake_language(GET_MESSAGE_LOG_LEVEL log_level)
+if(log_level MATCHES "VERBOSE|DEBUG|TRACE")
+  message(STATUS "---------------------------------------------------------")
+  message(STATUS "Default build type is: ${CMAKE_BUILD_TYPE}")
+  message(STATUS "The following compilation flags will be used:")
 
-foreach(flag ${cxx_all_flags})
-  message(${flag} " ${${flag}}")
-endforeach()
+# ------------------------
+# Lists all the cxx flags
+  set(cxx_all_flags
+    CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO CMAKE_CXX_FLAGS_RELEASE
+    CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_MINSIZEREL CMAKE_C_FLAGS_RELWITHDEBINFO CMAKE_C_FLAGS_RELEASE)
 
-message(STATUS "---------------------------------------------------------")
+  foreach(flag ${cxx_all_flags})
+    message(${flag} " ${${flag}}")
+  endforeach()
 
-get_directory_property(DirectoryCompileOptions DIRECTORY ${PROJECT_SOURCE_DIR} COMPILE_OPTIONS)
-message(STATUS "Directory Compile Options:")
+  message(STATUS "---------------------------------------------------------")
 
-foreach(opt ${DirectoryCompileOptions})
-  message(STATUS ${opt})
-endforeach()
+  get_directory_property(DirectoryCompileOptions DIRECTORY ${PROJECT_SOURCE_DIR} COMPILE_OPTIONS)
+  message(STATUS "Directory Compile Options:")
 
-message(STATUS "---------------------------------------------------------")
+  foreach(opt ${DirectoryCompileOptions})
+    message(STATUS ${opt})
+  endforeach()
 
-get_directory_property(DirectoryCompileDefinitions DIRECTORY ${PROJECT_SOURCE_DIR} COMPILE_DEFINITIONS)
-message(STATUS "Directory Compile Definitions:")
+  message(STATUS "---------------------------------------------------------")
 
-foreach(def ${DirectoryCompileDefinitions})
-  message(STATUS ${def})
-endforeach()
+  get_directory_property(DirectoryCompileDefinitions DIRECTORY ${PROJECT_SOURCE_DIR} COMPILE_DEFINITIONS)
+  message(STATUS "Directory Compile Definitions:")
 
-message(STATUS "---------------------------------------------------------")
+  foreach(def ${DirectoryCompileDefinitions})
+    message(STATUS ${def})
+  endforeach()
+
+  message(STATUS "---------------------------------------------------------")
+endif()
 
 # ----------------------------------------------
 # Modifies output directory for all executables

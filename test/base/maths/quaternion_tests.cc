@@ -34,6 +34,10 @@ using ozz::math::Float3;
 using ozz::math::Float4;
 using ozz::math::Quaternion;
 
+TEST(QuaternionDefault, ozz_math) {
+  EXPECT_QUATERNION_EQ(Quaternion{}, 0.f, 0.f, 0.f, 1.f);
+}
+
 TEST(QuaternionConstant, ozz_math) {
   EXPECT_QUATERNION_EQ(Quaternion::identity(), 0.f, 0.f, 0.f, 1.f);
 }

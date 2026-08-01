@@ -134,9 +134,9 @@ void ImGuiImpl::BeginFrame(const Inputs& _inputs, const math::RectInt& _rect,
   auto_gen_id_ = 0;
 
   // Reset container stack info.
-  const math::RectFloat rect(
+  const math::RectFloat rect{
       static_cast<float>(_rect.left), static_cast<float>(_rect.bottom),
-      static_cast<float>(_rect.width), static_cast<float>(_rect.height));
+      static_cast<float>(_rect.width), static_cast<float>(_rect.height)};
   Container container = {rect, rect.height - kWidgetHeight, false};
   containers_.push_back(container);
 
@@ -314,18 +314,18 @@ void ImGuiImpl::BeginContainer(const char* _title, const math::RectFloat* _rect,
   // Inserts header.
   container.offset_y -= header_height;
 
-  const math::RectFloat title_rect(container.rect.left,
+  const math::RectFloat title_rect{container.rect.left,
                                    container.rect.bottom + container.offset_y,
-                                   container.rect.width, header_height);
+                                   container.rect.width, header_height};
 
   // Don't display any arrow if _open is nullptr.
   const float arrow_size = _open != nullptr ? kWidgetHeight : 0;
-  const math::RectFloat open_close_rect(title_rect.left, title_rect.bottom,
-                                        arrow_size, kWidgetHeight);
+  const math::RectFloat open_close_rect{title_rect.left, title_rect.bottom,
+                                        arrow_size, kWidgetHeight};
 
-  const math::RectFloat label_rect(
+  const math::RectFloat label_rect{
       title_rect.left + arrow_size + kTextMarginX, title_rect.bottom,
-      title_rect.width - arrow_size - kTextMarginX, kWidgetHeight);
+      title_rect.width - arrow_size - kTextMarginX, kWidgetHeight};
 
   // Adds a margin before the next widget only if it is opened.
   if (!_open || *_open) {
@@ -457,9 +457,9 @@ bool ImGuiImpl::DoButton(const char* _label, bool _enabled, bool* _state) {
   StrokeRect(rect, kButtonRoundRectRadius, *border_color);
 
   // Renders button label.
-  const math::RectFloat text_rect(
+  const math::RectFloat text_rect{
       rect.left + kButtonRoundRectRadius, rect.bottom - active_offset,
-      rect.width - kButtonRoundRectRadius * 2.f, rect.height - active_offset);
+      rect.width - kButtonRoundRectRadius * 2.f, rect.height - active_offset};
   Print(_label, text_rect, kMiddle, *text_color);
 
   return clicked;
@@ -471,9 +471,9 @@ bool ImGuiImpl::DoCheckBox(const char* _label, bool* _state, bool _enabled) {
     return false;
   }
 
-  math::RectFloat check_rect(widget_rect.left, widget_rect.bottom,
+  math::RectFloat check_rect{widget_rect.left, widget_rect.bottom,
                              kWidgetHeight,  // The check box is square.
-                             widget_rect.height);
+                             widget_rect.height};
 
   ++auto_gen_id_;
 
@@ -547,9 +547,9 @@ bool ImGuiImpl::DoCheckBox(const char* _label, bool* _state, bool _enabled) {
   }
 
   // Renders button label.
-  const math::RectFloat text_rect(
+  const math::RectFloat text_rect{
       check_rect.right() + kTextMarginX, widget_rect.bottom,
-      widget_rect.width - check_rect.width - kTextMarginX, widget_rect.height);
+      widget_rect.width - check_rect.width - kTextMarginX, widget_rect.height};
   Print(_label, text_rect, kWest, *text_color);
 
   return clicked;
@@ -562,9 +562,9 @@ bool ImGuiImpl::DoRadioButton(int _ref, const char* _label, int* _value,
     return false;
   }
 
-  math::RectFloat radio_rect(widget_rect.left, widget_rect.bottom,
+  math::RectFloat radio_rect{widget_rect.left, widget_rect.bottom,
                              kWidgetHeight,  // The check box is square.
-                             widget_rect.height);
+                             widget_rect.height};
 
   ++auto_gen_id_;
 
@@ -611,16 +611,16 @@ bool ImGuiImpl::DoRadioButton(int _ref, const char* _label, int* _value,
 
   // Renders the "checked" button.
   if (*_value == _ref) {
-    const math::RectFloat checked_rect(
+    const math::RectFloat checked_rect{
         radio_rect.left + 1.f, radio_rect.bottom + 1.f, radio_rect.width - 3.f,
-        radio_rect.height - 3.f);
+        radio_rect.height - 3.f};
     FillRect(checked_rect, kWidgetRoundRectRadius, *check_color);
   }
 
   // Renders button label.
-  const math::RectFloat text_rect(
+  const math::RectFloat text_rect{
       radio_rect.right() + kTextMarginX, widget_rect.bottom,
-      widget_rect.width - radio_rect.width - kTextMarginX, widget_rect.height);
+      widget_rect.width - radio_rect.width - kTextMarginX, widget_rect.height};
   Print(_label, text_rect, kWest, *text_color);
 
   return clicked;
@@ -652,10 +652,10 @@ void ImGuiImpl::DoGraph(const char* _label, float _min, float _max, float _mean,
   const float label_width =
       static_cast<float>(kGraphLabelDigits * font_.glyph_width);
 
-  const math::RectFloat graph_rect(
+  const math::RectFloat graph_rect{
       widget_rect.left, widget_rect.bottom,
       widget_rect.width - label_width - kTextMarginX,
-      kWidgetHeight * kGraphHeightFactor);
+      kWidgetHeight * kGraphHeightFactor};
 
   // Renders background and borders.
   FillRect(graph_rect, 0, kGraphBackgroundColor);
@@ -664,33 +664,33 @@ void ImGuiImpl::DoGraph(const char* _label, float _min, float _max, float _mean,
   // Render labels.
   char sz[16];
   const char* sz_end = sz + OZZ_ARRAY_SIZE(sz);
-  const math::RectFloat max_rect(
+  const math::RectFloat max_rect{
       widget_rect.left, graph_rect.top() - font_.glyph_height,
-      widget_rect.width, static_cast<float>(font_.glyph_height));
+      widget_rect.width, static_cast<float>(font_.glyph_height)};
   if (FormatFloat(_max, sz, sz_end)) {
     Print(sz, max_rect, kEst, kWidgetTextColor);
   }
 
-  const math::RectFloat mean_rect(
+  const math::RectFloat mean_rect{
       widget_rect.left,
       graph_rect.bottom + graph_rect.height / 2.f - font_.glyph_height / 2.f,
-      widget_rect.width, static_cast<float>(font_.glyph_height));
+      widget_rect.width, static_cast<float>(font_.glyph_height)};
   if (FormatFloat(_mean, sz, sz_end)) {
     Print(sz, mean_rect, kEst, kWidgetTextColor);
   }
 
-  const math::RectFloat min_rect(widget_rect.left, graph_rect.bottom,
+  const math::RectFloat min_rect{widget_rect.left, graph_rect.bottom,
                                  widget_rect.width,
-                                 static_cast<float>(font_.glyph_height));
+                                 static_cast<float>(font_.glyph_height)};
   if (FormatFloat(_min, sz, sz_end)) {
     Print(sz, min_rect, kEst, kWidgetTextColor);
   }
 
   // Prints title on the left.
   if (_label) {
-    const math::RectFloat label_rect(
+    const math::RectFloat label_rect{
         widget_rect.left, widget_rect.top() - font_.glyph_height,
-        widget_rect.width, static_cast<float>(font_.glyph_height));
+        widget_rect.width, static_cast<float>(font_.glyph_height)};
     Print(_label, label_rect, kNorthWest, kWidgetTextColor);
   }
 
@@ -823,20 +823,20 @@ bool ImGuiImpl::DoSlider(const char* _label, float _min, float _max,
                     static_cast<int>(rect.width), _enabled, active, &cursor);
 
   // Renders slider's rail.
-  const math::RectFloat rail_rect(rect.left, rect.bottom, rect.width,
-                                  rect.height);
+  const math::RectFloat rail_rect{rect.left, rect.bottom, rect.width,
+                                  rect.height};
   FillRect(rail_rect, kSliderRoundRectRadius, *background_color);
   StrokeRect(rail_rect, kSliderRoundRectRadius, *border_color);
 
-  const math::RectFloat cursor_rect(
+  const math::RectFloat cursor_rect{
       rect.left + cursor - kWidgetCursorWidth / 2.f, rect.bottom - 1.f,
-      kWidgetCursorWidth, rect.height + 2.f);
+      kWidgetCursorWidth, rect.height + 2.f};
   FillRect(cursor_rect, kSliderRoundRectRadius, *slider_color);
   StrokeRect(cursor_rect, kSliderRoundRectRadius, *slider_border_color);
 
-  const math::RectFloat text_rect(
+  const math::RectFloat text_rect{
       rail_rect.left + kSliderRoundRectRadius, rail_rect.bottom,
-      rail_rect.width - kSliderRoundRectRadius * 2.f, rail_rect.height);
+      rail_rect.width - kSliderRoundRectRadius * 2.f, rail_rect.height};
   Print(_label, text_rect, kMiddle, *text_color);
 
   // Returns true if the value has changed or if it was clamped in _min / _max
@@ -913,23 +913,23 @@ bool ImGuiImpl::DoSlider2D(const char* _label, ozz::array<float, 2> _min,
   }
 
   // Renders slider's rail.
-  const math::RectFloat rail_rect(rect.left, rect.bottom, rect.width,
-                                  rect.height);
+  const math::RectFloat rail_rect{rect.left, rect.bottom, rect.width,
+                                  rect.height};
   FillRect(rail_rect, kSliderRoundRectRadius, *background_color);
   StrokeRect(rail_rect, kSliderRoundRectRadius, *border_color);
 
   // Finds cursor position and rect.
-  const math::RectFloat cursor_rect(
+  const math::RectFloat cursor_rect{
       rect.left + cursor[0] - kWidgetHeight / 2.f,
       rect.bottom + cursor[1] - kWidgetHeight / 2.f, kWidgetHeight,
-      kWidgetHeight);
+      kWidgetHeight};
 
   // Cursor cross
-  const math::RectFloat cross_hrect(rect.left, rect.bottom + cursor[1],
-                                    rect.width, 1);
+  const math::RectFloat cross_hrect{rect.left, rect.bottom + cursor[1],
+                                    rect.width, 1};
   StrokeRect(cross_hrect, 0.f, *slider_color);
-  const math::RectFloat cross_vrect(rect.left + cursor[0], rect.bottom, 1,
-                                    rect.height);
+  const math::RectFloat cross_vrect{rect.left + cursor[0], rect.bottom, 1,
+                                    rect.height};
   StrokeRect(cross_vrect, 0.f, *slider_color);
 
   // Draw slider
@@ -937,9 +937,9 @@ bool ImGuiImpl::DoSlider2D(const char* _label, ozz::array<float, 2> _min,
   StrokeRect(cursor_rect, kSliderRoundRectRadius, *slider_border_color);
 
   // Text
-  const math::RectFloat text_rect(
+  const math::RectFloat text_rect{
       rail_rect.left + kSliderRoundRectRadius, rail_rect.bottom,
-      rail_rect.width - kSliderRoundRectRadius * 2.f, rail_rect.height);
+      rail_rect.width - kSliderRoundRectRadius * 2.f, rail_rect.height};
   Print(_label, text_rect, kMiddle, *text_color);
 
   // Returns true if the value has changed or if it was clamped in _min / _max

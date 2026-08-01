@@ -43,6 +43,7 @@
 #include "ozz/base/io/archive.h"
 #include "ozz/base/io/stream.h"
 #include "ozz/base/log.h"
+#include "ozz/base/maths/box.h"
 #include "ozz/base/maths/math_ex.h"
 #include "ozz/base/maths/simd_math.h"
 #include "ozz/base/maths/soa_transform.h"
@@ -163,47 +164,35 @@ class OptimizeSampleApplication : public ozz::sample::Application {
       const ozz::animation::offline::RawAnimation& _animation, float _time,
       ozz::span<ozz::math::SoaTransform> _locals) {
     // Ensure output is big enough.
-    if (_locals.size() * 4 < _animation.tracks.size() &&
-        locals_raw_aos_.size() * 4 < _animation.tracks.size()) {
+    assert(_locals.size() * 4 == locals_raw_aos_.size() &&
+           _locals.size() * 4 >= _animation.tracks.size());
+
+    // Samples raw animation in AoS format.
+    if (!ozz::animation::offline::SampleAnimation(_animation, _time,
+                                                  make_span(locals_raw_aos_))) {
       return false;
     }
 
-    // Sample raw animation and converts AoS transforms to SoA transform array.
-    assert(_animation.Validate() && "Animation should be valid.");
-    bool success = true;
-    for (int i = 0; success && i < _animation.num_tracks(); i += 4) {
-      ozz::math::SimdFloat4 translations[4];
-      ozz::math::SimdFloat4 rotations[4];
-      ozz::math::SimdFloat4 scales[4];
-
-      // Works on 4 consecutive tracks, or what remains to be processed if it's
-      // lower than 4.
-      const int jmax = ozz::math::Min(_animation.num_tracks() - i, 4);
-      for (int j = 0; success && j < jmax; ++j) {
-        // Samples raw animation.
-        ozz::math::Transform transform;
-        success &= SampleTrack(_animation.tracks[i + j], _time, &transform);
-
-        // Convert transform to AoS SimdFloat4 values.
+    // Convert sampled transforms from AoS to SoA.
+    ozz::math::SimdFloat4 translations[4];
+    ozz::math::SimdFloat4 rotations[4];
+    ozz::math::SimdFloat4 scales[4];
+    for (size_t i = 0; i < _locals.size(); ++i) {
+      for (int j = 0; j < 4; ++j) {
+        const ozz::math::Transform& transform = locals_raw_aos_[i * 4 + j];
         translations[j] =
             ozz::math::simd_float4::Load3PtrU(&transform.translation.x);
         rotations[j] = ozz::math::simd_float4::LoadPtrU(&transform.rotation.x);
         scales[j] = ozz::math::simd_float4::Load3PtrU(&transform.scale.x);
       }
-      // Fills remaining transforms.
-      for (int j = jmax; j < 4; ++j) {
-        translations[j] = ozz::math::simd_float4::zero();
-        rotations[j] = ozz::math::simd_float4::w_axis();
-        scales[j] = ozz::math::simd_float4::one();
-      }
-      // Stores AoS keyframes to the SoA output.
-      ozz::math::SoaTransform& output = _locals[i / 4];
+
+      ozz::math::SoaTransform& output = _locals[i];
       ozz::math::Transpose4x3(translations, &output.translation.x);
       ozz::math::Transpose4x4(rotations, &output.rotation.x);
       ozz::math::Transpose4x3(scales, &output.scale.x);
     }
 
-    return success;
+    return true;
   }
 
   // Selects model space matrices according to the display mode.
@@ -272,7 +261,7 @@ class OptimizeSampleApplication : public ozz::sample::Application {
     // Allocates runtime buffers.
     locals_rt_.resize(num_soa_joints);
     models_rt_.resize(num_joints);
-    locals_raw_aos_.resize(num_joints);
+    locals_raw_aos_.resize(num_soa_joints * 4);  // Padding for SoA conversion.
     locals_raw_.resize(num_soa_joints);
     models_raw_.resize(num_joints);
     locals_diff_.resize(num_soa_joints);
@@ -472,9 +461,9 @@ class OptimizeSampleApplication : public ozz::sample::Application {
     return true;
   }
 
-  virtual void GetSceneBounds(ozz::math::Box* _bound) const {
-    ozz::sample::ComputePostureBounds(models(), ozz::math::Float4x4::identity(),
-                                      _bound);
+  virtual ozz::math::Box GetSceneBounds() const {
+    return ozz::sample::ComputePostureBounds(models(),
+                                             ozz::math::Float4x4::identity());
   }
 
  private:
